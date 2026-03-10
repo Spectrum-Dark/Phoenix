@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Phoenix App — Panel de control de tu negocio.">
+  <title>Phoenix — Mi Negocio</title>
+  <link rel="stylesheet" href="../Assets/Css/app.css">
+  <script defer type="module" src="../Assets/Js/app.js"></script>
+  <script defer type="module" src="../Assets/Js/firebase.js"></script>
+</head>
+<body>
+
+<div class="app-layout">
+
+  <!-- ═══════════════ SIDEBAR ═══════════════ -->
+  <nav class="sidebar" aria-label="Menú principal">
+
+    <!-- Brand -->
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon">🔥</div>
+      <span class="sidebar-brand-text">Phoenix</span>
+    </div>
+
+    <!-- Navegación -->
+    <span class="sidebar-section">Principal</span>
+
+    <a href="#" class="nav-item active" id="nav-inicio">
+      <span class="nav-item-icon">🏠</span>
+      Inicio
+    </a>
+
+    <a href="#" class="nav-item" id="nav-negocio">
+      <span class="nav-item-icon">🏪</span>
+      Mi Negocio
+      <span class="nav-badge">PRO</span>
+    </a>
+
+    <a href="#" class="nav-item" id="nav-actividad">
+      <span class="nav-item-icon">📊</span>
+      Actividad
+    </a>
+
+    <span class="sidebar-section">Configuración</span>
+
+    <a href="#" class="nav-item" id="nav-perfil">
+      <span class="nav-item-icon">👤</span>
+      Mi Perfil
+    </a>
+
+    <a href="#" class="nav-item" id="nav-ajustes">
+      <span class="nav-item-icon">⚙️</span>
+      Ajustes
+    </a>
+
+    <!-- Perfil del usuario -->
+    <div class="sidebar-profile" style="margin-top: auto; border-top: 1px solid var(--border);" tabindex="0">
+      <div class="avatar">CM</div>
+      <div class="avatar-info">
+        <div class="avatar-name">Carlos Martínez</div>
+        <div class="avatar-role">Propietario</div>
+      </div>
+      <span style="color:var(--text-subtle); font-size:14px;">⋯</span>
+    </div>
+
+  </nav>
+
+  <!-- ═══════════════ CONTENIDO PRINCIPAL ═══════════════ -->
+  <div class="main-content">
+
+    <!-- ── Topbar ── -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h2>Panel de Control</h2>
+        <p>Lunes, 9 de Marzo 2026</p>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-btn notif-dot" id="btn-notifs" title="Notificaciones" aria-label="Notificaciones">🔔</button>
+        <button class="topbar-btn" id="btn-search" title="Buscar" aria-label="Buscar">🔍</button>
+        <!-- Cerrar sesión (demo) -->
+        <button
+          id="btn-logout"
+          class="action-btn action-btn-secondary"
+          onclick="window.location.href='../index.html'"
+        >
+          Salir
+        </button>
+      </div>
+    </header>
+
+    <!-- ── Page Content ── -->
+    <main class="page-content">
+
+      <!-- Saludo -->
+      <div class="page-greeting">
+        <h1>¡Hola, Carlos! 👋</h1>
+        <p>Aquí tienes el resumen de tu negocio.</p>
+      </div>
+
+      <!-- ═══ BENTO GRID ═══ -->
+      <div class="bento-grid">
+
+        <!-- ─── HERO: Info del Negocio ─── -->
+        <div class="bento-cell bento-hero" id="card-negocio">
+          <div class="bento-label">Mi Negocio</div>
+
+          <div class="bento-business-info">
+            <div class="business-name-group">
+              <div class="business-icon-wrap">🏪</div>
+              <div>
+                <div class="business-name">Tienda El Sol</div>
+                <div class="business-sub">Registro activo · Desde Enero 2025</div>
+              </div>
+            </div>
+
+            <div class="owner-chip">
+              <span class="owner-chip-label">Propietario:</span>
+              <span class="owner-chip-name">Carlos Martínez</span>
+            </div>
+          </div>
+
+          <div class="bento-actions" style="margin-top: 8px;">
+            <button class="action-btn action-btn-primary" id="btn-editar-negocio">✏️ Editar negocio</button>
+            <button class="action-btn action-btn-secondary" id="btn-ver-detalles">Ver detalles</button>
+          </div>
+        </div>
+
+        <!-- ─── STAT: Estado ─── -->
+        <div class="bento-cell bento-stat col-4" id="card-estado">
+          <div class="stat-icon stat-icon-green">✅</div>
+          <div class="stat-value stat-value-green">Activo</div>
+          <div class="stat-label">Estado del negocio</div>
+          <div class="stat-trend">⬆ En línea · verificado</div>
+        </div>
+
+        <!-- ─── INFO: Propietario ─── -->
+        <div class="bento-cell bento-owner" id="card-propietario">
+          <div class="bento-label" style="justify-content:center;">Propietario</div>
+          <div class="owner-avatar">CM</div>
+          <div class="owner-name">Carlos Martínez</div>
+          <div class="owner-title">Administrador principal</div>
+          <span class="owner-tag">👑 Dueño</span>
+        </div>
+
+        <!-- ─── STAT: Nombre ─── -->
+        <div class="bento-cell bento-stat col-4" id="card-nombre">
+          <div class="stat-icon stat-icon-blue">🏷️</div>
+          <div class="stat-value stat-value-blue" style="font-size:1.3rem;">Tienda El Sol</div>
+          <div class="stat-label">Nombre registrado</div>
+          <div class="stat-trend" style="color:var(--blue);">⬆ Nombre único</div>
+        </div>
+
+        <!-- ─── Actividad Reciente ─── -->
+        <div class="bento-cell bento-activity" id="card-actividad">
+          <div class="activity-title">
+            Actividad reciente
+            <span>Ver todo →</span>
+          </div>
+          <div class="activity-list">
+            <div class="activity-item">
+              <span class="activity-dot dot-green"></span>
+              <span class="activity-text">Perfil del negocio actualizado</span>
+              <span class="activity-time">Hace 2 min</span>
+            </div>
+            <div class="activity-item">
+              <span class="activity-dot dot-blue"></span>
+              <span class="activity-text">Nueva sesión iniciada desde Chrome</span>
+              <span class="activity-time">Hace 14 min</span>
+            </div>
+            <div class="activity-item">
+              <span class="activity-dot dot-green"></span>
+              <span class="activity-text">Datos de negocio guardados correctamente</span>
+              <span class="activity-time">Hace 1 hora</span>
+            </div>
+            <div class="activity-item">
+              <span class="activity-dot dot-gray"></span>
+              <span class="activity-text">Cuenta creada exitosamente</span>
+              <span class="activity-time">Ayer</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── Acceso Rápido ─── -->
+        <div class="bento-cell bento-quick" id="card-rapido">
+          <div class="quick-title">Acceso rápido</div>
+          <div class="quick-list">
+            <div class="quick-item" tabindex="0">
+              <span class="quick-item-icon">✏️</span>
+              <span class="quick-item-text">Editar negocio</span>
+              <span class="quick-item-arrow">›</span>
+            </div>
+            <div class="quick-item" tabindex="0">
+              <span class="quick-item-icon">🔐</span>
+              <span class="quick-item-text">Seguridad</span>
+              <span class="quick-item-arrow">›</span>
+            </div>
+            <div class="quick-item" tabindex="0">
+              <span class="quick-item-icon">📋</span>
+              <span class="quick-item-text">Historial</span>
+              <span class="quick-item-arrow">›</span>
+            </div>
+            <div class="quick-item" tabindex="0">
+              <span class="quick-item-icon">🔔</span>
+              <span class="quick-item-text">Notificaciones</span>
+              <span class="quick-item-arrow">›</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── Completitud de Perfil ─── -->
+        <div class="bento-cell bento-progress col-12" id="card-progreso">
+          <div class="progress-header">
+            <span class="progress-title">Completitud del perfil</span>
+            <span class="progress-pct" id="pct-label">75%</span>
+          </div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="progress-fill"></div>
+          </div>
+          <div class="progress-items">
+            <span class="progress-item"><span class="check">✔</span> Nombre del propietario</span>
+            <span class="progress-item"><span class="check">✔</span> Nombre del negocio</span>
+            <span class="progress-item"><span class="check">✔</span> Correo verificado</span>
+            <span class="progress-item"><span class="pending">○</span> Foto de perfil</span>
+          </div>
+        </div>
+
+      </div><!-- /bento-grid -->
+    </main><!-- /page-content -->
+
+  </div><!-- /main-content -->
+</div><!-- /app-layout -->
+
+<script>
+  /* ─── Animar barra de progreso ─── */
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const fill = document.getElementById('progress-fill');
+      if (fill) fill.style.width = '75%';
+    }, 400);
+  });
+
+  /* ─── Nav items demo ─── */
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', e => {
+      e.preventDefault();
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>
