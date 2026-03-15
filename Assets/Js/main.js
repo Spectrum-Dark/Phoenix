@@ -8,6 +8,9 @@ import {
   get,
   update,
   remove,
+  query,
+  orderByChild,
+  equalTo,
 } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
 
 // ── Configuración base de SweetAlert2 con tema Phoenix ──
@@ -17,10 +20,10 @@ const Phoenix = Swal.mixin({
   confirmButtonColor: "#17D7A0",
   cancelButtonColor: "#2A3040",
   customClass: {
-    popup:         "phoenix-popup",
+    popup: "phoenix-popup",
     confirmButton: "phoenix-btn-confirm",
-    cancelButton:  "phoenix-btn-cancel",
-    title:         "phoenix-title",
+    cancelButton: "phoenix-btn-cancel",
+    title: "phoenix-title",
     htmlContainer: "phoenix-text",
   },
 });
@@ -82,7 +85,7 @@ async function RegistrarAdmin() {
   let Id = 1;
 
   if (Snapshot.exists()) {
-    //Obtenemos el ultimo ID
+    //Obtenemos valores
     const AdminData = Snapshot.val();
     //Mapeamos el IDS
     const AdminIds = Object.keys(AdminData).map(Number);
@@ -91,7 +94,7 @@ async function RegistrarAdmin() {
   }
 
   //Guardamos el registro en un array
-  const Admins = [{ Nombre: email, Contraseña: password }];
+  const Admins = [{ Email: email, Password: password }];
 
   //Recorremos el array y guardamos el registro
   for (const Admin of Admins) {
@@ -122,3 +125,74 @@ const btnRegister = document.getElementById("btn-register");
 
 //Agregamos el evento click
 btnRegister.addEventListener("click", RegistrarAdmin);
+
+//--------------------------------------------------------------------------------------------------------------
+
+//Inicio de sesion
+async function IniciarSesion(email, password) {
+  //Llamamos a la referencia
+  const AdminRef = ref(Database, "Administradores");
+
+  //Creamos la consulta
+  const AdminQuery = query(
+    AdminRef,
+    orderByChild("Email"),
+    equalTo(email)
+  );
+
+  //Obtenemos los admins existentes
+  const Snapshot = await get(AdminQuery);
+
+  console.log(Snapshot.val());
+
+  if (!Snapshot.exists()) {
+    Phoenix.fire({
+      icon: "error",
+      iconColor: "#eb5757",
+      title: "No existe el administrador",
+      text: "El administrador no existe. Verifica e inténtalo de nuevo.",
+      confirmButtonText: "Entendido",
+    });
+    return;
+  }
+
+  //Obtenemos los campos necesarios
+  const AdminData = Snapshot.val();
+  const AdminID = Object.keys(AdminData)[0];
+  const Admin = AdminData[AdminID];
+
+  //Validamos la contraseña
+  if (Admin.Password !== password) {
+    Phoenix.fire({
+      icon: "error",
+      iconColor: "#eb5757",
+      title: "Contraseña incorrecta",
+      text: "La contraseña es incorrecta. Verifica e inténtalo de nuevo.",
+      confirmButtonText: "Entendido",
+    });
+    return;
+  }
+
+  //Mostramos un mensaje de éxito
+  PhoenixToast.fire({
+    icon: "success",
+    iconColor: "#17D7A0",
+    title: "Inicio de sesión exitoso",
+  });
+
+  //Guardamos el admin en el localStorage
+  localStorage.setItem("Admin", JSON.stringify(Admin.Email));
+
+  //Redirigimos a la App
+  window.location.href = "./Views/app.html";
+}
+
+//Capturamos el boton de iniciar sesion
+const btnLogin = document.getElementById("btn-login");
+
+//Agregamos el evento click
+btnLogin.addEventListener("click", () => {
+  const email = document.getElementById("login-email").value;
+  const password = document.getElementById("login-password").value;
+  IniciarSesion(email, password);
+});

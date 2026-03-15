@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Phoenix — Gestión de Servicios">
+  <title>Phoenix — Servicios</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../Assets/Css/servicios.css">
+  <!-- Lógica de Servicios -->
+  <script defer type="module" src="../Assets/Js/servicios.js"></script>
+</head>
+<body>
+
+  <div class="servicios-wrapper">
+
+    <!-- Header de la vista -->
+    <div class="servicios-header">
+      <div class="servicios-header-left">
+        <div class="view-icon green">
+          <i class="bi bi-clipboard2-check-fill"></i>
+        </div>
+        <div>
+          <h1 class="servicios-title">Servicios</h1>
+          <p class="servicios-subtitle">Catálogo y seguimiento de servicios ofrecidos a clientes.</p>
+        </div>
+      </div>
+      <!-- Botón de nuevo servicio removido a solicitud -->
+    </div>
+
+    <!-- Stats -->
+    <div class="servicios-stats">
+      <div class="mini-stat">
+        <i class="bi bi-clipboard2-check-fill"></i>
+        <div>
+          <span class="mini-stat-val">34</span>
+          <span class="mini-stat-lbl">Total servicios</span>
+        </div>
+      </div>
+      <div class="mini-stat">
+        <i class="bi bi-check-circle-fill"></i>
+        <div>
+          <span class="mini-stat-val">28</span>
+          <span class="mini-stat-lbl">Activos</span>
+        </div>
+      </div>
+      <div class="mini-stat">
+        <i class="bi bi-x-circle-fill"></i>
+        <div>
+          <span class="mini-stat-val">2</span>
+          <span class="mini-stat-lbl">Inactivos</span>
+        </div>
+      </div>
+      <div class="mini-stat">
+        <i class="bi bi-tools"></i>
+        <div>
+          <span class="mini-stat-val">4</span>
+          <span class="mini-stat-lbl">Mantenimiento</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de búsqueda / filtros -->
+    <div class="servicios-toolbar">
+      <div class="search-wrap">
+        <i class="bi bi-search search-icon"></i>
+        <input type="text" id="servicios-search" placeholder="Buscar por nombre de cliente..." />
+      </div>
+      <div class="toolbar-filters">
+        <select id="filtro-estado">
+          <option value="">Todos los estados</option>
+          <option value="activo">Activo</option>
+          <option value="inactivo">Inactivo</option>
+          <option value="mantenimiento">Mantenimiento</option>
+        </select>
+        <button class="btn-icon" title="Exportar" id="btn-exportar-servicios">
+          <i class="bi bi-download"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Tabla de servicios -->
+    <div class="servicios-list-wrap">
+      <table class="servicios-table" id="servicios-table">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Teléfono</th>
+            <th>Negocio</th>
+            <th>Dirección</th>
+            <th>Token</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="servicios-tbody">
+          
+          <!-- Mock Row de prueba -->
+           <tr>
+             <td>
+               <div class="td-user">
+                 <div class="td-avatar">JP</div>
+                 <div class="td-name">Juan Pérez</div>
+               </div>
+             </td>
+             <td>+505 8888 8888</td>
+             <td>Tienda El Sol</td>
+             <td><span class="truncate" title="Del parque central 2C al norte">Del parque central 2C al norte</span></td>
+             <td><span class="token-badge">PHNX-ABCD-1234-XYZ9</span></td>
+             <td><span class="status-badge status-activo" title="Activo"><i class="bi bi-check-lg"></i></span></td>
+             <td>
+                <div class="table-actions">
+                  <button class="btn-action edit-btn" title="Editar" data-id="1">
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  <button class="btn-action delete-btn" title="Eliminar" data-id="1">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+             </td>
+           </tr>
+
+           <!-- Segundo MOCK de prueba para mantenimiento -->
+           <tr>
+            <td>
+              <div class="td-user">
+                <div class="td-avatar" style="background: linear-gradient(135deg, var(--blue), var(--bg-input));">MQ</div>
+                <div class="td-name">María Quintana</div>
+              </div>
+            </td>
+            <td>+505 7777 7777</td>
+            <td>Boutique MQ</td>
+            <td><span class="truncate" title="Rotonda Bello Horizonte 1C Abajo">Rotonda Bello Horizonte 1C Abajo</span></td>
+            <td><span class="token-badge">PHNX-ZXY1-9988-ABC0</span></td>
+            <td><span class="status-badge status-mantenimiento" title="Mantenimiento"><i class="bi bi-tools"></i></span></td>
+            <td>
+               <div class="table-actions">
+                 <button class="btn-action edit-btn" title="Editar" data-id="2">
+                   <i class="bi bi-pencil-square"></i>
+                 </button>
+                 <button class="btn-action delete-btn" title="Eliminar" data-id="2">
+                   <i class="bi bi-trash"></i>
+                 </button>
+               </div>
+            </td>
+          </tr>
+
+          <!-- Tercer MOCK de prueba para inactivo -->
+           <tr>
+            <td>
+              <div class="td-user">
+                <div class="td-avatar" style="background: linear-gradient(135deg, var(--blue), var(--bg-input));">CR</div>
+                <div class="td-name">Cristhiam Rayo</div>
+              </div>
+            </td>
+            <td>+505 84456512</td>
+            <td>Cronos elputero</td>
+            <td><span class="truncate" title="Rotonda Bello Horizonte 1C Abajo">Rotonda Bello Horizonte 1C Abajo</span></td>
+            <td><span class="token-badge">PHNX-ZXY1-9988-456X</span></td>
+            <td><span class="status-badge status-inactivo" title="Inactivo"><i class="bi bi-x-lg"></i></span></td>
+            <td>
+               <div class="table-actions">
+                 <button class="btn-action edit-btn" title="Editar" data-id="2">
+                   <i class="bi bi-pencil-square"></i>
+                 </button>
+                 <button class="btn-action delete-btn" title="Eliminar" data-id="2">
+                   <i class="bi bi-trash"></i>
+                 </button>
+               </div>
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+  <!-- ══════════════ MODAL DE EDICIÓN ══════════════ -->
+  <div class="modal-overlay" id="modal-editar">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2><i class="bi bi-pencil-square"></i> Editar Cliente</h2>
+        <button class="close-modal" id="close-modal"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-editar-servicio" class="neo-form">
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Nombre del cliente</label>
+              <div class="input-wrap">
+                <i class="bi bi-person input-icon"></i>
+                <input type="text" id="edit-nombre" value="Juan Pérez" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Número de teléfono</label>
+              <div class="input-wrap">
+                <i class="bi bi-telephone input-icon"></i>
+                <input type="tel" id="edit-numero" value="+505 8888 8888" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-grid mt-3">
+            <div class="form-group">
+              <label>Nombre del negocio</label>
+              <div class="input-wrap">
+                <i class="bi bi-building input-icon"></i>
+                <input type="text" id="edit-negocio" value="Tienda El Sol" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Dirección</label>
+              <div class="input-wrap">
+                <i class="bi bi-geo-alt input-icon"></i>
+                <input type="text" id="edit-direccion" value="Del parque central 2C al norte" required>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-grid mt-3">
+            <div class="form-group">
+              <label>Estado del servicio</label>
+              <select id="edit-estado" class="form-select">
+                <option value="activo" selected>Activo</option>
+                <option value="inactivo">Inactivo</option>
+                <option value="mantenimiento">Mantenimiento</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Token de servicio (Protegido)</label>
+              <div class="input-wrap token-disabled">
+                <i class="bi bi-shield-lock input-icon"></i>
+                <input type="text" id="edit-token" value="PHNX-ABCD-1234-XYZ9" readonly>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-actions mt-4">
+            <button type="button" class="btn-ghost" id="btn-cancelar-modal">Cancelar</button>
+            <button type="submit" class="btn-primary" id="btn-guardar-modal"><i class="bi bi-floppy"></i> Guardar Cambios</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  </div> <!-- /servicios-wrapper -->
+
+</body>
+</html>
