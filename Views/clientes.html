@@ -3,113 +3,283 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Phoenix — Registro de Clientes">
-  <title>Phoenix — Nuevo Cliente</title>
+  <title>Phoenix — Clientes Premium</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="../Assets/Css/clientes.css">
-  
-  <!-- Lógica e integración -->
-  <script defer type="module" src="../Assets/Js/firebase.js"></script>
-  <script defer type="module" src="../Assets/Js/clientes.js"></script>
 </head>
 <body>
 
-  <div class="clientes-wrapper">
-    
-    <!-- Header -->
-    <div class="clientes-header">
-      <div class="clientes-header-left">
-        <div class="view-icon green">
-          <i class="bi bi-person-plus-fill"></i>
+<div class="cl-container">
+
+  <!-- ══ HEADER PREMIUM ══ -->
+  <div class="cl-header-blur">
+    <div class="cl-header-content">
+      <div class="cl-title-group">
+        <div class="cl-icon-glow">
+          <i class="bi bi-people-fill"></i>
         </div>
-        <div>
-          <h1 class="clientes-title">Registrar Cliente</h1>
-          <p class="clientes-subtitle">Ingresa los datos para dar de alta un nuevo perfil de cliente.</p>
+        <div class="cl-title-text">
+          <h1>Directorio de Clientes</h1>
+          <p>Gestión avanzada de carteras y suscripciones.</p>
         </div>
       </div>
+      <button class="cl-btn-primary" id="btn-toggle-form">
+        <i class="bi bi-plus-lg"></i> Nuevo Cliente
+      </button>
     </div>
+  </div>
 
-    <!-- Formulario -->
-    <div class="form-container">
-      <form id="form-registro-cliente" class="neo-form">
-        
-        <!-- Sección 1: Datos Personales -->
-        <div class="form-section-title">
-          <i class="bi bi-person"></i> Datos Personales
-        </div>
-        
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="cliente-nombre">Nombre del cliente</label>
-            <div class="input-wrap">
-              <i class="bi bi-person input-icon"></i>
+  <!-- ══ MINI STATS (GRID) ══ -->
+  <div class="cl-stats-grid" id="cl-stats-row">
+    <!-- Stat 1 -->
+    <div class="cl-stat-card cl-card-glass">
+      <div class="cl-stat-top">
+        <div class="cl-stat-icon cl-icon-total"><i class="bi bi-person-lines-fill"></i></div>
+        <span class="cl-stat-label">Total Clientes</span>
+      </div>
+      <div class="cl-stat-value" id="cl-stat-total">—</div>
+    </div>
+    <!-- Stat 2 -->
+    <div class="cl-stat-card cl-card-glass">
+      <div class="cl-stat-top">
+        <div class="cl-stat-icon cl-icon-active"><i class="bi bi-check-circle-fill"></i></div>
+        <span class="cl-stat-label">Activos</span>
+      </div>
+      <div class="cl-stat-value" id="cl-stat-activos">—</div>
+    </div>
+    <!-- Stat 3 -->
+    <div class="cl-stat-card cl-card-glass">
+      <div class="cl-stat-top">
+        <div class="cl-stat-icon cl-icon-maint"><i class="bi bi-tools"></i></div>
+        <span class="cl-stat-label">En Mantenimiento</span>
+      </div>
+      <div class="cl-stat-value" id="cl-stat-mant">—</div>
+    </div>
+    <!-- Stat 4 -->
+    <div class="cl-stat-card cl-card-glass">
+      <div class="cl-stat-top">
+        <div class="cl-stat-icon cl-icon-inactive"><i class="bi bi-x-circle-fill"></i></div>
+        <span class="cl-stat-label">Inactivos</span>
+      </div>
+      <div class="cl-stat-value" id="cl-stat-inact">—</div>
+    </div>
+  </div>
+
+  <!-- ══ FORMULARIO COLAPSABLE (CREAR) ══ -->
+  <div class="cl-form-wrapper" id="form-container" style="display: none;">
+    <div class="cl-card-glass cl-form-card">
+      <div class="cl-form-header">
+        <h2 class="cl-form-title"><i class="bi bi-person-plus-fill"></i> Registrar Alta</h2>
+        <button class="cl-btn-close" id="btn-close-form"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <form id="form-registro-cliente" class="cl-form" novalidate>
+        <!-- Datos Personales -->
+        <h3 class="cl-section-subtitle"><i class="bi bi-person"></i> Información Personal</h3>
+        <div class="cl-grid-2">
+          <div class="cl-input-group">
+            <label>Nombre Completo <span class="cl-req">*</span></label>
+            <div class="cl-input-control">
+              <i class="bi bi-person cl-input-icon"></i>
               <input type="text" id="cliente-nombre" placeholder="Ej. Juan Pérez" required>
             </div>
+            <span class="cl-err-msg" id="err-cliente-nombre"></span>
           </div>
-          
-          <div class="form-group">
-            <label for="cliente-numero">Número de teléfono</label>
-            <div class="input-wrap">
-              <i class="bi bi-telephone input-icon"></i>
+          <div class="cl-input-group">
+            <label>Teléfono <span class="cl-req">*</span></label>
+            <div class="cl-input-control">
+              <i class="bi bi-telephone cl-input-icon"></i>
               <input type="tel" id="cliente-numero" placeholder="Ej. +505 8888 8888" required>
             </div>
+            <span class="cl-err-msg" id="err-cliente-numero"></span>
           </div>
         </div>
 
-        <!-- Sección 2: Datos del Negocio -->
-        <div class="form-section-title mt-4">
-          <i class="bi bi-shop"></i> Datos del Negocio
-        </div>
-
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="negocio-nombre">Nombre del negocio</label>
-            <div class="input-wrap">
-              <i class="bi bi-building input-icon"></i>
-              <input type="text" id="negocio-nombre" placeholder="Ej. Tienda El Sol" required>
+        <!-- Datos Negocio -->
+        <h3 class="cl-section-subtitle"><i class="bi bi-shop"></i> Datos de la Empresa</h3>
+        <div class="cl-grid-2">
+          <div class="cl-input-group">
+            <label>Razón Social / Negocio <span class="cl-req">*</span></label>
+            <div class="cl-input-control">
+              <i class="bi bi-building cl-input-icon"></i>
+              <input type="text" id="negocio-nombre" placeholder="Ej. Corporación Zeta" required>
             </div>
+            <span class="cl-err-msg" id="err-negocio-nombre"></span>
           </div>
-          
-          <div class="form-group">
-            <label for="negocio-direccion">Dirección del negocio</label>
-            <div class="input-wrap">
-              <i class="bi bi-geo-alt input-icon"></i>
-              <input type="text" id="negocio-direccion" placeholder="Ej. Del parque central 2C al norte" required>
+          <div class="cl-input-group">
+            <label>Dirección Física <span class="cl-req">*</span></label>
+            <div class="cl-input-control">
+              <i class="bi bi-geo-alt cl-input-icon"></i>
+              <input type="text" id="negocio-direccion" placeholder="Ubicación comercial" required>
             </div>
+            <span class="cl-err-msg" id="err-negocio-direccion"></span>
           </div>
         </div>
 
-        <!-- Sección 3: Autenticación / Token -->
-        <div class="form-section-title mt-4">
-          <i class="bi bi-key"></i> Autenticación de Servicio
-        </div>
-
-        <div class="form-group">
-          <label for="servicio-token">Token de servicio</label>
-          <div class="token-wrap">
-            <div class="input-wrap flex-1">
-              <i class="bi bi-shield-lock input-icon"></i>
-              <input type="text" id="servicio-token" placeholder="Presiona generar para crear un token" readonly required>
+        <!-- Token -->
+        <h3 class="cl-section-subtitle"><i class="bi bi-shield-lock"></i> Seguridad & API</h3>
+        <div class="cl-input-group">
+          <label>Token de Servicio <span class="cl-req">*</span></label>
+          <div class="cl-token-flex">
+            <div class="cl-input-control cl-flex-fill">
+              <i class="bi bi-key cl-input-icon"></i>
+              <input type="text" id="servicio-token" class="cl-token-input" placeholder="Genera un token seguro..." readonly required>
             </div>
-            <button type="button" id="btn-generar-token" class="btn-secondary">
+            <button type="button" class="cl-btn-secondary" id="btn-generar-token">
               <i class="bi bi-arrow-clockwise"></i> Generar
             </button>
           </div>
-          <small class="form-hint">Este token único vinculará los servicios exclusivos del cliente.</small>
+          <span class="cl-err-msg" id="err-servicio-token"></span>
+          <p class="cl-input-hint">Llave única de 12 dígitos para conexiones API y webhook.</p>
         </div>
 
-        <!-- Acciones -->
-        <div class="form-actions">
-          <button type="button" id="btn-cancelar" class="btn-ghost">Cancelar</button>
-          <button type="submit" id="btn-guardar" class="btn-primary">
-            <i class="bi bi-floppy"></i> Guardar Cliente
+        <div class="cl-form-footer">
+          <button type="button" class="cl-btn-ghost" id="btn-cancelar">Cancelar</button>
+          <button type="submit" class="cl-btn-primary" id="btn-guardar">
+            <i class="bi bi-cloud-arrow-up"></i> Guardar Registro
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ══ TABLA PRINCIPAL (DATAGRID) ══ -->
+  <div class="cl-card-glass cl-datagrid-card">
+    
+    <!-- Toolbar -->
+    <div class="cl-toolbar">
+      <div class="cl-tb-left">
+        <h2 class="cl-tb-title">Base de Datos <span class="cl-badge-count" id="cl-count-badge">0</span></h2>
+      </div>
+      <div class="cl-tb-right">
+        <div class="cl-search-box">
+          <i class="bi bi-search"></i>
+          <input type="text" id="cl-search" placeholder="Buscar ID, nombre, negocio..." autocomplete="off">
+          <button id="cl-search-clear"><i class="bi bi-x"></i></button>
+        </div>
+        <select id="cl-filter-estado" class="cl-tb-select">
+          <option value="">Filtro: Todos</option>
+          <option value="activo">Activos</option>
+          <option value="mantenimiento">Mantenimiento</option>
+          <option value="inactivo">Inactivos</option>
+        </select>
+        <select id="cl-sort" class="cl-tb-select">
+          <option value="id-asc">ID ↑</option>
+          <option value="id-desc">ID ↓</option>
+          <option value="nombre-asc">Nombre A-Z</option>
+          <option value="fecha-desc">Más Nuevos</option>
+        </select>
+        <button class="cl-btn-icon" id="cl-btn-refresh" title="Sincronizar">
+          <i class="bi bi-arrow-repeat"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Wrapper de Tabla -->
+    <div class="cl-table-wrapper">
+      <table class="cl-table" id="cl-table">
+        <thead>
+          <tr>
+            <th width="80">ID</th>
+            <th>Cliente / Razón Social</th>
+            <th>Contacto</th>
+            <th>Suscripción</th>
+            <th>Estado</th>
+            <th align="right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="cl-tbody">
+          <!-- JS Inject -->
+          <tr>
+            <td colspan="6" class="cl-empty-state">
+              <i class="bi bi-hourglass-split cl-spin"></i> Cargando clientes...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Footer Tabla -->
+    <div class="cl-toolbar-footer">
+      <span id="cl-result-count">Mostrando 0 registros</span>
+    </div>
+  </div>
+
+</div> <!-- /cl-container -->
+
+<!-- ══ MODAL DE EDICIÓN ══ -->
+<div class="cl-modal-overlay" id="modal-editar">
+  <div class="cl-modal-card cl-card-glass">
+    <div class="cl-modal-header">
+      <h2><i class="bi bi-pencil-square"></i> Modificar Cliente</h2>
+      <button class="cl-btn-close" id="close-modal"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="cl-modal-body">
+      <form id="form-editar-servicio" class="cl-form" novalidate>
+        
+        <div class="cl-grid-2">
+          <div class="cl-input-group">
+            <label>Nombre Completo</label>
+            <div class="cl-input-control">
+              <i class="bi bi-person cl-input-icon"></i>
+              <input type="text" id="edit-nombre" required>
+            </div>
+          </div>
+          <div class="cl-input-group">
+            <label>Teléfono</label>
+            <div class="cl-input-control">
+              <i class="bi bi-telephone cl-input-icon"></i>
+              <input type="tel" id="edit-numero" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="cl-grid-2">
+          <div class="cl-input-group">
+            <label>Razón Social</label>
+            <div class="cl-input-control">
+              <i class="bi bi-building cl-input-icon"></i>
+              <input type="text" id="edit-negocio" required>
+            </div>
+          </div>
+          <div class="cl-input-group">
+            <label>Dirección</label>
+            <div class="cl-input-control">
+              <i class="bi bi-geo-alt cl-input-icon"></i>
+              <input type="text" id="edit-direccion" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="cl-grid-2">
+          <div class="cl-input-group">
+            <label>Estado Operativo</label>
+            <select id="edit-estado" class="cl-tb-select" style="width:100%">
+              <option value="activo">Activo</option>
+              <option value="mantenimiento">Mantenimiento</option>
+              <option value="inactivo">Inactivo</option>
+            </select>
+          </div>
+          <div class="cl-input-group">
+            <label>Autenticación (Solo-Lectura)</label>
+            <div class="cl-input-control">
+              <i class="bi bi-shield-lock cl-input-icon"></i>
+              <input type="text" id="edit-token" class="cl-token-input" readonly>
+            </div>
+          </div>
+        </div>
+
+        <div class="cl-form-footer">
+          <button type="button" class="cl-btn-ghost" id="btn-cancelar-modal">Cancelar</button>
+          <button type="submit" class="cl-btn-primary" id="btn-guardar-modal">
+            <i class="bi bi-check2-circle"></i> Aplicar Cambios
           </button>
         </div>
 
       </form>
     </div>
-
   </div>
+</div>
 
 </body>
 </html>

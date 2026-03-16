@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Phoenix — Mi Perfil</title>
+  </head>
+  <body>
+    <!-- ══════════════════════════════════════════════
+         MÓDULO: MI PERFIL
+         Este fragmento es inyectado en #view-perfil
+         dentro de app.html por el router de app.js
+    ══════════════════════════════════════════════ -->
+    <div class="perfil-wrapper">
+
+      <!-- ══ COLUMNA IZQUIERDA — Tarjeta Avatar ══ -->
+      <div class="perfil-sidebar-card">
+
+        <!-- Avatar con botón de edición -->
+        <div class="perfil-avatar-wrap" id="perfil-avatar-wrap" title="Cambiar foto de perfil">
+          <div class="perfil-avatar" id="perfil-avatar-display">
+            <span id="perfil-avatar-initials">?</span>
+            <img id="perfil-avatar-img" src="" alt="Avatar" style="display:none;" />
+          </div>
+          <label class="perfil-avatar-edit" for="input-avatar" title="Subir foto">
+            <i class="bi bi-camera-fill"></i>
+          </label>
+        </div>
+        <input type="file" id="input-avatar" accept="image/*" />
+
+        <!-- Info básica -->
+        <div>
+          <p class="perfil-user-name" id="sidebar-name">—</p>
+          <p class="perfil-user-email" id="sidebar-email">—</p>
+        </div>
+        <span class="perfil-user-role">
+          <i class="bi bi-shield-check-fill"></i> Propietario
+        </span>
+
+        <div class="perfil-divider"></div>
+
+        <!-- Mini estadísticas -->
+        <div class="perfil-mini-stats">
+          <div class="perfil-mini-stat">
+            <span class="perfil-mini-stat-label">
+              <i class="bi bi-calendar3"></i> Registro
+            </span>
+            <span class="perfil-mini-stat-val" id="mini-registro">—</span>
+          </div>
+          <div class="perfil-mini-stat">
+            <span class="perfil-mini-stat-label">
+              <i class="bi bi-clock"></i> Última sesión
+            </span>
+            <span class="perfil-mini-stat-val" id="mini-sesion">Ahora</span>
+          </div>
+          <div class="perfil-mini-stat">
+            <span class="perfil-mini-stat-label">
+              <i class="bi bi-activity"></i> Acciones
+            </span>
+            <span class="perfil-mini-stat-val" id="mini-acciones">0</span>
+          </div>
+        </div>
+
+        <div class="perfil-divider"></div>
+
+        <!-- Botón cerrar sesión rápido -->
+        <button class="perfil-btn perfil-btn-danger" id="perfil-logout-btn" style="width:100%; justify-content:center;">
+          <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+        </button>
+      </div>
+
+      <!-- ══ COLUMNA DERECHA — Secciones ══ -->
+      <div class="perfil-main-col">
+
+        <!-- ── 1. INFORMACIÓN PERSONAL ── -->
+        <div class="perfil-section-card">
+          <div class="perfil-section-header">
+            <h2 class="perfil-section-title">
+              <i class="bi bi-person-fill green"></i>
+              Información del usuario
+            </h2>
+          </div>
+          <div class="perfil-section-body">
+            <div class="perfil-form-grid">
+              <div class="perfil-form-group">
+                <label for="perfil-nombre">Nombre completo</label>
+                <input class="perfil-input" type="text" id="perfil-nombre"
+                  placeholder="Tu nombre completo" autocomplete="name" />
+              </div>
+              <div class="perfil-form-group">
+                <label for="perfil-nickname">Usuario / Nickname</label>
+                <input class="perfil-input" type="text" id="perfil-nickname"
+                  placeholder="@tu_usuario" autocomplete="username" />
+              </div>
+              <div class="perfil-form-group">
+                <label for="perfil-email">Correo electrónico</label>
+                <input class="perfil-input" type="email" id="perfil-email"
+                  placeholder="tu@correo.com" autocomplete="email" readonly />
+              </div>
+              <div class="perfil-form-group">
+                <label for="perfil-telefono">Teléfono</label>
+                <input class="perfil-input" type="tel" id="perfil-telefono"
+                  placeholder="+52 000 000 0000" autocomplete="tel" />
+              </div>
+              <div class="perfil-form-group form-group-full">
+                <label for="perfil-descripcion">Descripción personal</label>
+                <textarea class="perfil-textarea" id="perfil-descripcion"
+                  placeholder="Cuéntanos algo sobre ti…"></textarea>
+              </div>
+            </div>
+            <div class="perfil-form-actions">
+              <button class="perfil-btn perfil-btn-secondary" id="btn-perfil-cancelar">
+                <i class="bi bi-x"></i> Cancelar
+              </button>
+              <button class="perfil-btn perfil-btn-primary" id="btn-perfil-guardar">
+                <i class="bi bi-floppy2-fill"></i> Guardar cambios
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── 2. ESTADÍSTICAS ── -->
+        <div class="perfil-section-card">
+          <div class="perfil-section-header">
+            <h2 class="perfil-section-title">
+              <i class="bi bi-bar-chart-fill blue"></i>
+              Estadísticas del usuario
+            </h2>
+          </div>
+          <div class="perfil-section-body">
+            <div class="perfil-stats-grid">
+              <div class="perfil-stat">
+                <div class="perfil-stat-icon green">
+                  <i class="bi bi-calendar-check-fill"></i>
+                </div>
+                <span class="perfil-stat-val" id="stat-fecha">—</span>
+                <span class="perfil-stat-label">Fecha de registro</span>
+              </div>
+              <div class="perfil-stat">
+                <div class="perfil-stat-icon blue">
+                  <i class="bi bi-lightning-charge-fill"></i>
+                </div>
+                <span class="perfil-stat-val" id="stat-acciones">0</span>
+                <span class="perfil-stat-label">Acciones realizadas</span>
+              </div>
+              <div class="perfil-stat">
+                <div class="perfil-stat-icon green">
+                  <i class="bi bi-clock-history"></i>
+                </div>
+                <span class="perfil-stat-val" id="stat-sesion">Ahora</span>
+                <span class="perfil-stat-label">Última conexión</span>
+              </div>
+            </div>
+
+            <!-- Actividad reciente -->
+            <h3 class="section-title" style="margin-top: 24px; margin-bottom: 12px;">
+              <i class="bi bi-activity"></i> Actividad reciente
+            </h3>
+            <div class="perfil-activity-list" id="perfil-activity-list">
+              <!-- Cargado dinámicamente por perfil.js -->
+              <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.85rem;">
+                <i class="bi bi-hourglass-split" style="font-size: 1.5rem; display:block; margin-bottom:8px;"></i>
+                Cargando actividad…
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── 3. CAMBIAR CONTRASEÑA ── -->
+        <div class="perfil-section-card">
+          <div class="perfil-section-header">
+            <h2 class="perfil-section-title">
+              <i class="bi bi-shield-lock-fill green"></i>
+              Seguridad del perfil
+            </h2>
+          </div>
+          <div class="perfil-section-body">
+            <div class="perfil-security-list">
+              <!-- Cambiar contraseña -->
+              <div class="perfil-security-item">
+                <div class="perfil-security-icon green">
+                  <i class="bi bi-key-fill"></i>
+                </div>
+                <div class="perfil-security-info">
+                  <div class="perfil-security-title">Cambiar contraseña</div>
+                  <div class="perfil-security-desc">Actualiza tu contraseña de acceso al panel</div>
+                </div>
+                <button class="perfil-btn perfil-btn-secondary" id="btn-cambiar-password">
+                  <i class="bi bi-pencil"></i> Cambiar
+                </button>
+              </div>
+
+              <!-- Sesiones activas -->
+              <div class="perfil-security-item">
+                <div class="perfil-security-icon blue">
+                  <i class="bi bi-display"></i>
+                </div>
+                <div class="perfil-security-info">
+                  <div class="perfil-security-title">Sesiones activas</div>
+                  <div class="perfil-security-desc">1 dispositivo conectado actualmente</div>
+                </div>
+                <button class="perfil-btn perfil-btn-secondary" id="btn-ver-sesiones">
+                  <i class="bi bi-eye"></i> Ver
+                </button>
+              </div>
+
+              <!-- Cerrar todas las sesiones -->
+              <div class="perfil-security-item">
+                <div class="perfil-security-icon red">
+                  <i class="bi bi-door-closed-fill"></i>
+                </div>
+                <div class="perfil-security-info">
+                  <div class="perfil-security-title">Cerrar todas las sesiones</div>
+                  <div class="perfil-security-desc">Cierra sesión en todos los dispositivos</div>
+                </div>
+                <button class="perfil-btn perfil-btn-danger" id="btn-cerrar-sesiones">
+                  <i class="bi bi-x-circle"></i> Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── 4. SESIONES ── (oculto por defecto, visible con btn-ver-sesiones) -->
+        <div class="perfil-section-card" id="perfil-sesiones-panel" style="display:none;">
+          <div class="perfil-section-header">
+            <h2 class="perfil-section-title">
+              <i class="bi bi-display blue"></i>
+              Sesiones activas
+            </h2>
+          </div>
+          <div class="perfil-section-body">
+            <div class="perfil-sessions-list" id="perfil-sessions-list">
+              <!-- Generado dinámicamente -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <!-- /perfil-main-col -->
+    </div>
+    <!-- /perfil-wrapper -->
+  </body>
+</html>

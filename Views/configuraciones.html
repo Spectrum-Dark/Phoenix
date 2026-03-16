@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Phoenix — Configuraciones</title>
+  </head>
+  <body>
+    <!-- ══════════════════════════════════════════════
+         MÓDULO: CONFIGURACIONES
+         Este fragmento es inyectado en #view-ajustes
+         dentro de app.html por el router de app.js
+    ══════════════════════════════════════════════ -->
+    <div class="config-wrapper">
+
+      <!-- ══ MENÚ LATERAL DE SECCIONES ══ -->
+      <nav class="config-nav" aria-label="Secciones de configuración">
+        <button class="config-nav-item active" data-panel="panel-cuenta">
+          <i class="bi bi-person-gear"></i> Cuenta
+        </button>
+        <button class="config-nav-item" data-panel="panel-preferencias">
+          <i class="bi bi-sliders"></i> Preferencias
+        </button>
+        <button class="config-nav-item" data-panel="panel-notificaciones">
+          <i class="bi bi-bell-fill"></i> Notificaciones
+        </button>
+        <button class="config-nav-item" data-panel="panel-privacidad">
+          <i class="bi bi-eye-slash-fill"></i> Privacidad
+        </button>
+        <button class="config-nav-item" data-panel="panel-seguridad">
+          <i class="bi bi-shield-lock-fill"></i> Seguridad
+        </button>
+      </nav>
+
+      <!-- ══ PANELES DE CONTENIDO ══ -->
+      <div class="config-main-col">
+
+        <!-- ─────────────────────────────────────
+             PANEL: CUENTA
+        ───────────────────────────────────── -->
+        <div class="config-panel active" id="panel-cuenta">
+
+          <!-- Cambiar contraseña -->
+          <div class="config-card">
+            <div class="config-card-header">
+              <div class="config-card-icon green">
+                <i class="bi bi-key-fill"></i>
+              </div>
+              <div>
+                <h3 class="config-card-title">Cambiar contraseña</h3>
+                <p class="config-card-subtitle">Actualiza tu contraseña de acceso</p>
+              </div>
+            </div>
+            <div class="config-card-body">
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <div class="config-input-group">
+                  <label for="conf-pass-actual">Contraseña actual</label>
+                  <input class="config-input" type="password" id="conf-pass-actual"
+                    placeholder="••••••••" autocomplete="current-password" />
+                </div>
+                <div class="config-input-row">
+                  <div class="config-input-group">
+                    <label for="conf-pass-nueva">Nueva contraseña</label>
+                    <input class="config-input" type="password" id="conf-pass-nueva"
+                      placeholder="••••••••" autocomplete="new-password" />
+                  </div>
+                  <div class="config-input-group">
+                    <label for="conf-pass-confirm">Confirmar nueva</label>
+                    <input class="config-input" type="password" id="conf-pass-confirm"
+                      placeholder="••••••••" autocomplete="new-password" />
+                  </div>
+                </div>
+                <div class="config-save-row">
+                  <button class="config-btn config-btn-primary" id="btn-guardar-password">
+                    <i class="bi bi-shield-check-fill"></i> Actualizar contraseña
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actualizar correo -->
+          <div class="config-card">
+            <div class="config-card-header">
+              <div class="config-card-icon blue">
+                <i class="bi bi-envelope-at-fill"></i>
+              </div>
+              <div>
+                <h3 class="config-card-title">Actualizar correo</h3>
+                <p class="config-card-subtitle">Modifica tu dirección de correo de acceso</p>
+              </div>
+            </div>
+            <div class="config-card-body">
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <div class="config-input-group">
+                  <label for="conf-email-nuevo">Nuevo correo electrónico</label>
+                  <input class="config-input" type="email" id="conf-email-nuevo"
+                    placeholder="nuevo@correo.com" autocomplete="email" />
+                </div>
+                <div class="config-input-group">
+                  <label for="conf-email-pass">Contraseña actual (confirmación)</label>
+                  <input class="config-input" type="password" id="conf-email-pass"
+                    placeholder="••••••••" autocomplete="current-password" />
+                </div>
+                <div class="config-save-row">
+                  <button class="config-btn config-btn-primary" id="btn-guardar-email">
+                    <i class="bi bi-envelope-check-fill"></i> Actualizar correo
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Verificación de seguridad -->
+          <div class="config-card">
+            <div class="config-card-header">
+              <div class="config-card-icon yellow">
+                <i class="bi bi-patch-check-fill"></i>
+              </div>
+              <div>
+                <h3 class="config-card-title">Verificación de seguridad</h3>
+                <p class="config-card-subtitle">Activa capas adicionales de protección</p>
+              </div>
+            </div>
+            <div class="config-card-body">
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label">
+                    <i class="bi bi-phone-vibrate-fill"></i>
+                    Doble verificación por SMS
+                  </div>
+                  <div class="config-row-desc">Requiere un código al iniciar sesión en nuevos dispositivos</div>
+                </div>
+                <label class="config-toggle">
+                  <input type="checkbox" id="toggle-2fa" data-key="2fa" />
+                  <span class="config-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label">
+                    <i class="bi bi-envelope-check"></i>
+                    Alertas de inicio de sesión por email
+                  </div>
+                  <div class="config-row-desc">Recibe un aviso en tu correo cuando inicies sesión</div>
+                </div>
+                <label class="config-toggle">
+                  <input type="checkbox" id="toggle-login-alert" data-key="loginAlert" checked />
+                  <span class="config-toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─────────────────────────────────────
+             PANEL: PREFERENCIAS
+        ───────────────────────────────────── -->
+        <div class="config-panel" id="panel-preferencias">
+
+          <!-- Tema visual -->
+          <div class="config-card">
+            <div class="config-card-header">
+              <div class="config-card-icon blue">
+                <i class="bi bi-palette-fill"></i>
+              </div>
+              <div>
+                <h3 class="config-card-title">Tema visual</h3>
+                <p class="config-card-subtitle">Elige entre modo oscuro, claro o automático</p>
+              </div>
+            </div>
+            <div class="config-card-body">
+              <div class="config-theme-options">
+                <label class="config-theme-card selected" id="theme-dark">
+                  <input type="radio" name="conf-theme" value="dark" checked />
+                  <div class="config-theme-preview dark"></div>
+                  <span class="config-theme-label">Oscuro</span>
+                </label>
+                <label class="config-theme-card" id="theme-light">
+                  <input type="radio" name="conf-theme" value="light" />
+                  <div class="config-theme-preview light"></div>
+                  <span class="config-theme-label">Claro</span>
+                </label>
+                <label class="config-theme-card" id="theme-auto">
+                  <input type="radio" name="conf-theme" value="auto" />
+                  <div class="config-theme-preview auto"></div>
+                  <span class="config-theme-label">Automático</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Idioma y región -->
+          <div class="config-card">
+            <div class="config-card-header">
+              <div class="config-card-icon green">
+                <i class="bi bi-globe2"></i>
+              </div>
+              <div>
+                <h3 class="config-card-title">Idioma y región</h3>
+                <p class="config-card-subtitle">Personaliza el idioma, fecha y zona horaria</p>
+              </div>
+            </div>
+            <div class="config-card-body">
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label"><i class="bi bi-translate"></i> Idioma</div>
+                </div>
+                <select class="config-select" id="conf-idioma" data-key="idioma" style="width:auto; min-width:140px;">
+                  <option value="es">Español</option>
+                  <option value="en">English</option>
+                  <option value="pt">Português</option>
+                </select>
+              </div>
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label"><i class="bi bi-calendar-date"></i> Formato de fecha</div>
+                </div>
+                <select class="config-select" id="conf-fecha" data-key="fechaFormato" style="width:auto; min-width:140px;">
+                  <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                  <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                  <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                </select>
+              </div>
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label"><i class="bi bi-clock-fill"></i> Zona horaria</div>
+                </div>
+                <select class="config-select" id="conf-timezone" data-key="timezone" style="width:auto; min-width:160px;">
+                  <option value="America/Mexico_City">México (UTC-6)</option>
+                  <option value="America/Bogota">Colombia (UTC-5)</option>
+                  <option value="America/Argentina/Buenos_Aires">Argentina (UTC-3)</option>
+                  <option value="America/Lima">Peru (UTC-5)</option>
+                  <option value="America/Santiago">Chile (UTC-4)</option>
+                  <option value="Europe/Madrid">España (UTC+1)</option>
+                </select>
+              </div>
+              <div class="config-save-row">
+                <button class="config-btn config-btn-primary" id="btn-guardar-region">
+                  <i class="bi bi-floppy2-fill"></i> Guardar preferencias
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ─────────────────────────────────────
+             PANEL: NOTIFICACIONES
+        ───────────────────────────────────── -->
+        <div class="config-panel" id="panel-notificaciones">
+          <div class="config-card">
+            <div class="config-card-header">
+              <div class="config-card-icon green">
+                <i class="bi bi-bell-fill"></i>
+              </div>
+              <div>
+                <h3 class="config-card-title">Notificaciones</h3>
+                <p class="config-card-subtitle">Controla qué notificaciones recibes y cómo</p>
+              </div>
+            </div>
+            <div class="config-card-body">
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label"><i class="bi bi-envelope-fill"></i> Notificaciones por email</div>
+                  <div class="config-row-desc">Recibe resúmenes y alertas en tu correo</div>
+                </div>
+                <label class="config-toggle">
+                  <input type="checkbox" id="toggle-notif-email" data-key="notifEmail" checked />
+                  <span class="config-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label"><i class="bi bi-bell-fill"></i> Notificaciones del sistema</div>
+                  <div class="config-row-desc">Alertas emergentes dentro del panel</div>
+                </div>
+                <label class="config-toggle">
+                  <input type="checkbox" id="toggle-notif-sistema" data-key="notifSistema" checked />
+                  <span class="config-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label"><i class="bi bi-exclamation-triangle-fill"></i> Alertas importantes</div>
+                  <div class="config-row-desc">Avisos críticos sobre tu cuenta y seguridad</div>
+                </div>
+                <label class="config-toggle">
+                  <input type="checkbox" id="toggle-notif-alertas" data-key="notifAlertas" checked />
+                  <span class="config-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label"><i class="bi bi-graph-up-arrow"></i> Actualizaciones del negocio</div>
+                  <div class="config-row-desc">Cambios en clientes, servicios y estadísticas</div>
+                </div>
+                <label class="config-toggle">
+                  <input type="checkbox" id="toggle-notif-negocio" data-key="notifNegocio" />
+                  <span class="config-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="config-save-row">
+                <button class="config-btn config-btn-primary" id="btn-guardar-notifs">
+                  <i class="bi bi-floppy2-fill"></i> Guardar notificaciones
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─────────────────────────────────────
+             PANEL: PRIVACIDAD
+        ───────────────────────────────────── -->
+        <div class="config-panel" id="panel-privacidad">
+          <div class="config-card">
+            <div class="config-card-header">
+              <div class="config-card-icon blue">
+                <i class="bi bi-eye-slash-fill"></i>
+              </div>
+              <div>
+                <h3 class="config-card-title">Privacidad</h3>
+                <p class="config-card-subtitle">Controla quién puede ver tu información</p>
+              </div>
+            </div>
+            <div class="config-card-body">
+
+              <!-- Visibilidad del perfil -->
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label"><i class="bi bi-person-lines-fill"></i> Visibilidad del perfil</div>
+                  <div class="config-row-desc">¿Quién puede ver tu perfil?</div>
+                </div>
+                <div class="config-radio-group">
+                  <label class="config-radio-option">
+                    <input type="radio" name="conf-visibilidad" value="publico" />
+                    <i class="bi bi-globe2"></i> Público
+                  </label>
+                  <label class="config-radio-option">
+                    <input type="radio" name="conf-visibilidad" value="privado" checked />
+                    <i class="bi bi-lock-fill"></i> Privado
+                  </label>
+                </div>
+              </div>
+
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label"><i class="bi bi-phone-fill"></i> Mostrar teléfono</div>
+                  <div class="config-row-desc">Permitir que otros usuarios vean tu teléfono</div>
+                </div>
+                <label class="config-toggle">
+                  <input type="checkbox" id="toggle-mostrar-tel" data-key="mostrarTel" />
+                  <span class="config-toggle-slider"></span>
+                </label>
+              </div>
+
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label"><i class="bi bi-activity"></i> Mostrar actividad reciente</div>
+                  <div class="config-row-desc">Otros pueden ver tu última conexión</div>
+                </div>
+                <label class="config-toggle">
+                  <input type="checkbox" id="toggle-mostrar-actividad" data-key="mostrarActividad" checked />
+                  <span class="config-toggle-slider"></span>
+                </label>
+              </div>
+
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label"><i class="bi bi-database-fill-x"></i> Eliminar datos de análisis</div>
+                  <div class="config-row-desc">Borra el historial de actividad almacenado</div>
+                </div>
+                <button class="config-btn config-btn-danger" id="btn-borrar-datos">
+                  <i class="bi bi-trash3-fill"></i> Borrar datos
+                </button>
+              </div>
+
+              <div class="config-save-row">
+                <button class="config-btn config-btn-primary" id="btn-guardar-privacidad">
+                  <i class="bi bi-floppy2-fill"></i> Guardar privacidad
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─────────────────────────────────────
+             PANEL: SEGURIDAD
+        ───────────────────────────────────── -->
+        <div class="config-panel" id="panel-seguridad">
+
+          <!-- Dispositivos conectados -->
+          <div class="config-card">
+            <div class="config-card-header">
+              <div class="config-card-icon blue">
+                <i class="bi bi-hdd-network-fill"></i>
+              </div>
+              <div>
+                <h3 class="config-card-title">Dispositivos conectados</h3>
+                <p class="config-card-subtitle">Gestiona los dispositivos con sesión activa</p>
+              </div>
+            </div>
+            <div class="config-card-body">
+              <div class="config-devices-list" id="config-devices-list">
+                <!-- Cargado por configuraciones.js -->
+                <div style="text-align:center; padding:16px; color:var(--text-muted); font-size:0.85rem;">
+                  <i class="bi bi-hourglass-split" style="display:block; font-size:1.5rem; margin-bottom:8px;"></i>
+                  Cargando dispositivos…
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Doble verificación -->
+          <div class="config-card">
+            <div class="config-card-header">
+              <div class="config-card-icon green">
+                <i class="bi bi-shield-shaded"></i>
+              </div>
+              <div>
+                <h3 class="config-card-title">Doble verificación</h3>
+                <p class="config-card-subtitle">Agrega una capa extra de seguridad a tu cuenta</p>
+              </div>
+            </div>
+            <div class="config-card-body">
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label"><i class="bi bi-phone-vibrate-fill"></i> Verificación en dos pasos (2FA)</div>
+                  <div class="config-row-desc">Al activar, necesitarás un código adicional para ingresar</div>
+                </div>
+                <label class="config-toggle">
+                  <input type="checkbox" id="toggle-seg-2fa" data-key="seg2fa" />
+                  <span class="config-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label"><i class="bi bi-geo-alt-fill"></i> Alertas de inicio inusual</div>
+                  <div class="config-row-desc">Notificaciones cuando inicies sesión desde un lugar nuevo</div>
+                </div>
+                <label class="config-toggle">
+                  <input type="checkbox" id="toggle-seg-geoalert" data-key="geoAlert" checked />
+                  <span class="config-toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zona de peligro -->
+          <div class="config-card config-danger-zone">
+            <div class="config-card-header">
+              <div class="config-card-icon red">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+              </div>
+              <div>
+                <h3 class="config-card-title">Zona de riesgo</h3>
+                <p class="config-card-subtitle">Acciones irreversibles — procede con cuidado</p>
+              </div>
+            </div>
+            <div class="config-card-body">
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label"><i class="bi bi-door-open-fill"></i> Cerrar todas las sesiones</div>
+                  <div class="config-row-desc">Cierra sesión de todos los dispositivos incluyendo este</div>
+                </div>
+                <button class="config-btn config-btn-danger" id="btn-cerrar-todas-sesiones">
+                  <i class="bi bi-x-circle-fill"></i> Cerrar sesiones
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+      <!-- /config-main-col -->
+    </div>
+    <!-- /config-wrapper -->
+  </body>
+</html>

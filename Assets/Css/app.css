@@ -547,6 +547,8 @@ html, body {
   font-family: 'Courier New', monospace;
 }
 
+
+
 /* ══════════════════════════════
    RESPONSIVE
 ══════════════════════════════ */
@@ -567,4 +569,437 @@ html, body {
   .stats-row { grid-template-columns: 1fr; gap: 10px; }
   .quick-grid { grid-template-columns: repeat(2, 1fr); }
   .view-title { font-size: 1.35rem; }
+}
+
+/* ══════════════════════════════
+   DASHBOARD — Smart Components
+══════════════════════════════ */
+
+/* Stat card clickable (navega a vista) */
+.stat-card-clickable {
+  cursor: pointer;
+}
+.stat-card-clickable:hover {
+  transform: translateY(-3px);
+  border-color: rgba(23,215,160,0.25);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+/* Trend badge en stat card */
+.stat-card-trend {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  position: absolute;
+  top: 14px;
+  right: 14px;
+}
+.stat-card { position: relative; }
+.stat-card-trend.green {
+  background: var(--green-dim);
+  color: var(--green);
+}
+.stat-card-trend.blue {
+  background: var(--blue-dim);
+  color: var(--blue);
+}
+
+/* ── Skeleton Loader ── */
+@keyframes dash-shimmer {
+  0%   { background-position: -300px 0; }
+  100% { background-position: 300px 0; }
+}
+.stat-skeleton {
+  display: inline-block;
+  width: 60px;
+  height: 20px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--bg-input) 25%, rgba(58,70,90,0.6) 50%, var(--bg-input) 75%);
+  background-size: 600px 100%;
+  animation: dash-shimmer 1.4s infinite;
+  vertical-align: middle;
+}
+
+/* ── Fila Secundaria (distribución + top) ── */
+.dash-row-secondary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* ── Cards genéricas del dashboard ── */
+.dash-card-wide,
+.dash-activity-card,
+.dash-system-card,
+.dash-reminders-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color var(--transition);
+}
+.dash-card-wide:hover,
+.dash-activity-card:hover,
+.dash-system-card:hover,
+.dash-reminders-card:hover {
+  border-color: rgba(23,215,160,0.12);
+}
+
+.dash-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.dash-card-body {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Badges del dashboard ── */
+.dash-badge-green {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid rgba(23,215,160,0.2);
+}
+.dash-badge-blue {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: var(--blue-dim);
+  color: var(--blue);
+  border: 1px solid rgba(81,107,235,0.2);
+}
+
+/* ── Progress bars ── */
+.dash-progress-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dash-progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.dash-progress-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.dash-progress-val {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.dash-progress-bar-wrap {
+  height: 6px;
+  background: var(--bg-input);
+  border-radius: 20px;
+  overflow: hidden;
+}
+.dash-progress-bar {
+  height: 100%;
+  border-radius: 20px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.dash-bar-green { background: var(--green); }
+.dash-bar-yellow { background: #F0A500; }
+.dash-bar-red   { background: #eb5757; }
+
+/* ── Top Negocios ── */
+.dash-top-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
+}
+.dash-top-item:hover {
+  border-color: rgba(23,215,160,0.15);
+}
+.dash-top-rank {
+  font-size: 0.68rem;
+  font-weight: 800;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: #0a1a14;
+}
+.dash-top-rank.gold   { background: #F0A500; }
+.dash-top-rank.silver { background: #9AA3B0; }
+.dash-top-rank.bronze { background: #C07040; }
+.dash-top-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dash-top-meta {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* ── Fila inferior (actividad + lateral) ── */
+.dash-row-bottom {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 16px;
+  margin-top: 0;
+}
+.dash-col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Actividad reciente ── */
+.dash-activity-list {
+  padding: 8px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+.dash-activity-list::-webkit-scrollbar { width: 4px; }
+.dash-activity-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.dash-activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
+}
+.dash-activity-item:hover {
+  border-color: rgba(23,215,160,0.15);
+}
+
+.dash-activity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+.dash-activity-dot.green { background: var(--green); box-shadow: 0 0 6px rgba(23,215,160,0.5); }
+.dash-activity-dot.blue  { background: var(--blue);  box-shadow: 0 0 6px rgba(81,107,235,0.4); }
+.dash-activity-dot.yellow { background: #F0A500; }
+
+.dash-activity-info { flex: 1; min-width: 0; }
+.dash-activity-desc {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dash-activity-time {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Botón refrescar en card header */
+.dash-icon-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.dash-icon-btn:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+.dash-icon-btn:active i {
+  animation: spin 0.4s linear;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Sistema ── */
+.dash-system-list {
+  padding: 8px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.dash-system-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.dash-system-row:last-child { border-bottom: none; }
+.dash-system-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.dash-system-label i { font-size: 13px; }
+
+.dash-sys-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+.dash-badge-online {
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid rgba(23,215,160,0.2);
+}
+.dash-badge-warning {
+  background: rgba(240,165,0,0.1);
+  color: #F0A500;
+  border: 1px solid rgba(240,165,0,0.2);
+}
+.dash-badge-error {
+  background: rgba(235,87,87,0.1);
+  color: #eb5757;
+  border: 1px solid rgba(235,87,87,0.2);
+}
+.dash-badge-neutral {
+  background: var(--bg-input);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+/* ── Recordatorios ── */
+.dash-reminders-list {
+  padding: 8px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dash-reminder-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  transition: all var(--transition);
+}
+.dash-reminder-item.info {
+  background: var(--blue-dim);
+  border-color: rgba(81,107,235,0.2);
+}
+.dash-reminder-item.warning {
+  background: rgba(240,165,0,0.08);
+  border-color: rgba(240,165,0,0.2);
+}
+.dash-reminder-item.success {
+  background: var(--green-dim);
+  border-color: rgba(23,215,160,0.2);
+}
+
+.dash-reminder-icon {
+  font-size: 15px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.dash-reminder-item.info    .dash-reminder-icon { color: var(--blue); }
+.dash-reminder-item.warning .dash-reminder-icon { color: #F0A500; }
+.dash-reminder-item.success .dash-reminder-icon { color: var(--green); }
+
+.dash-reminder-text {
+  font-size: 0.8rem;
+  color: var(--text);
+  line-height: 1.4;
+}
+.dash-reminder-text strong {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+/* ── Loading placeholder ── */
+.dash-loading {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.dash-loading i {
+  font-size: 1.1rem;
+}
+
+/* ── State: Estado del negocio en stat-card ── */
+#dash-estado-icon.activo   { background: var(--green-dim); color: var(--green); border: 1px solid rgba(23,215,160,0.2); }
+#dash-estado-icon.mant     { background: rgba(240,165,0,0.1); color: #F0A500; border: 1px solid rgba(240,165,0,0.2); }
+#dash-estado-icon.cerrado  { background: rgba(235,87,87,0.1); color: #eb5757; border: 1px solid rgba(235,87,87,0.2); }
+
+/* ── Topbar date ── */
+#topbar-date { font-size: 0.78rem; color: var(--text-muted); }
+
+/* ═══ RESPONSIVE DASHBOARD ═══ */
+@media (max-width: 1100px) {
+  .dash-row-bottom {
+    grid-template-columns: 1fr;
+  }
+  .dash-col-right {
+    flex-direction: row;
+  }
+  .dash-system-card,
+  .dash-reminders-card {
+    flex: 1;
+  }
+}
+
+@media (max-width: 860px) {
+  .dash-row-secondary {
+    grid-template-columns: 1fr;
+  }
+  .dash-col-right {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 768px) {
+  .dash-row-bottom {
+    grid-template-columns: 1fr;
+  }
 }
