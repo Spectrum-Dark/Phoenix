@@ -3,249 +3,242 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Phoenix — Gestión de Servicios">
-  <title>Phoenix — Servicios</title>
+  <title>Phoenix — Servicios y Suscripciones</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="../Assets/Css/servicios.css">
-  <!-- Lógica de Servicios -->
-  <script defer type="module" src="../Assets/Js/servicios.js"></script>
 </head>
 <body>
 
-  <div class="servicios-wrapper">
+<div class="sv-container">
 
-    <!-- Header de la vista -->
-    <div class="servicios-header">
-      <div class="servicios-header-left">
-        <div class="view-icon green">
-          <i class="bi bi-clipboard2-check-fill"></i>
+  <!-- ══ HEADER PREMIUM ══ -->
+  <div class="sv-header-blur">
+    <div class="sv-header-content">
+      <div class="sv-title-group">
+        <div class="sv-icon-glow">
+          <i class="bi bi-rocket-takeoff-fill"></i>
         </div>
-        <div>
-          <h1 class="servicios-title">Servicios</h1>
-          <p class="servicios-subtitle">Catálogo y seguimiento de servicios ofrecidos a clientes.</p>
-        </div>
-      </div>
-      <!-- Botón de nuevo servicio removido a solicitud -->
-    </div>
-
-    <!-- Stats -->
-    <div class="servicios-stats">
-      <div class="mini-stat">
-        <i class="bi bi-clipboard2-check-fill"></i>
-        <div>
-          <span class="mini-stat-val">34</span>
-          <span class="mini-stat-lbl">Total servicios</span>
+        <div class="sv-title-text">
+          <h1>Suscripciones</h1>
+          <p>Control automatizado de vencimientos y estados operativos.</p>
         </div>
       </div>
-      <div class="mini-stat">
-        <i class="bi bi-check-circle-fill"></i>
-        <div>
-          <span class="mini-stat-val">28</span>
-          <span class="mini-stat-lbl">Activos</span>
+      <!-- Panel de Alerta Inteligente (Se llena por JS si hay vencidos) -->
+      <div class="sv-alert-panel" id="sv-alert-panel" style="display: none;">
+        <i class="bi bi-exclamation-triangle-fill sv-alert-icon"></i>
+        <div class="sv-alert-text">
+          <strong>Atención Escudo:</strong> <span id="sv-alert-count">0</span> servicios vencidos desactivados hoy.
         </div>
-      </div>
-      <div class="mini-stat">
-        <i class="bi bi-x-circle-fill"></i>
-        <div>
-          <span class="mini-stat-val">2</span>
-          <span class="mini-stat-lbl">Inactivos</span>
-        </div>
-      </div>
-      <div class="mini-stat">
-        <i class="bi bi-tools"></i>
-        <div>
-          <span class="mini-stat-val">4</span>
-          <span class="mini-stat-lbl">Mantenimiento</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Barra de búsqueda / filtros -->
-    <div class="servicios-toolbar">
-      <div class="search-wrap">
-        <i class="bi bi-search search-icon"></i>
-        <input type="text" id="servicios-search" placeholder="Buscar por nombre de cliente..." />
-      </div>
-      <div class="toolbar-filters">
-        <select id="filtro-estado">
-          <option value="">Todos los estados</option>
-          <option value="activo">Activo</option>
-          <option value="inactivo">Inactivo</option>
-          <option value="mantenimiento">Mantenimiento</option>
-        </select>
-        <button class="btn-icon" title="Exportar" id="btn-exportar-servicios">
-          <i class="bi bi-download"></i>
-        </button>
-      </div>
-    </div>
-
-    <!-- Tabla de servicios -->
-    <div class="servicios-list-wrap">
-      <table class="servicios-table" id="servicios-table">
-        <thead>
-          <tr>
-            <th>Cliente</th>
-            <th>Teléfono</th>
-            <th>Negocio</th>
-            <th>Dirección</th>
-            <th>Token</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="servicios-tbody">
-          
-          <!-- Mock Row de prueba -->
-           <tr>
-             <td>
-               <div class="td-user">
-                 <div class="td-avatar">JP</div>
-                 <div class="td-name">Juan Pérez</div>
-               </div>
-             </td>
-             <td>+505 8888 8888</td>
-             <td>Tienda El Sol</td>
-             <td><span class="truncate" title="Del parque central 2C al norte">Del parque central 2C al norte</span></td>
-             <td><span class="token-badge">PHNX-ABCD-1234-XYZ9</span></td>
-             <td><span class="status-badge status-activo" title="Activo"><i class="bi bi-check-lg"></i></span></td>
-             <td>
-                <div class="table-actions">
-                  <button class="btn-action edit-btn" title="Editar" data-id="1">
-                    <i class="bi bi-pencil-square"></i>
-                  </button>
-                  <button class="btn-action delete-btn" title="Eliminar" data-id="1">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
-             </td>
-           </tr>
-
-           <!-- Segundo MOCK de prueba para mantenimiento -->
-           <tr>
-            <td>
-              <div class="td-user">
-                <div class="td-avatar" style="background: linear-gradient(135deg, var(--blue), var(--bg-input));">MQ</div>
-                <div class="td-name">María Quintana</div>
-              </div>
-            </td>
-            <td>+505 7777 7777</td>
-            <td>Boutique MQ</td>
-            <td><span class="truncate" title="Rotonda Bello Horizonte 1C Abajo">Rotonda Bello Horizonte 1C Abajo</span></td>
-            <td><span class="token-badge">PHNX-ZXY1-9988-ABC0</span></td>
-            <td><span class="status-badge status-mantenimiento" title="Mantenimiento"><i class="bi bi-tools"></i></span></td>
-            <td>
-               <div class="table-actions">
-                 <button class="btn-action edit-btn" title="Editar" data-id="2">
-                   <i class="bi bi-pencil-square"></i>
-                 </button>
-                 <button class="btn-action delete-btn" title="Eliminar" data-id="2">
-                   <i class="bi bi-trash"></i>
-                 </button>
-               </div>
-            </td>
-          </tr>
-
-          <!-- Tercer MOCK de prueba para inactivo -->
-           <tr>
-            <td>
-              <div class="td-user">
-                <div class="td-avatar" style="background: linear-gradient(135deg, var(--blue), var(--bg-input));">CR</div>
-                <div class="td-name">Cristhiam Rayo</div>
-              </div>
-            </td>
-            <td>+505 84456512</td>
-            <td>Cronos elputero</td>
-            <td><span class="truncate" title="Rotonda Bello Horizonte 1C Abajo">Rotonda Bello Horizonte 1C Abajo</span></td>
-            <td><span class="token-badge">PHNX-ZXY1-9988-456X</span></td>
-            <td><span class="status-badge status-inactivo" title="Inactivo"><i class="bi bi-x-lg"></i></span></td>
-            <td>
-               <div class="table-actions">
-                 <button class="btn-action edit-btn" title="Editar" data-id="2">
-                   <i class="bi bi-pencil-square"></i>
-                 </button>
-                 <button class="btn-action delete-btn" title="Eliminar" data-id="2">
-                   <i class="bi bi-trash"></i>
-                 </button>
-               </div>
-            </td>
-          </tr>
-
-        </tbody>
-      </table>
-    </div>
-
-  <!-- ══════════════ MODAL DE EDICIÓN ══════════════ -->
-  <div class="modal-overlay" id="modal-editar">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h2><i class="bi bi-pencil-square"></i> Editar Cliente</h2>
-        <button class="close-modal" id="close-modal"><i class="bi bi-x-lg"></i></button>
-      </div>
-      <div class="modal-body">
-        <form id="form-editar-servicio" class="neo-form">
-          
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Nombre del cliente</label>
-              <div class="input-wrap">
-                <i class="bi bi-person input-icon"></i>
-                <input type="text" id="edit-nombre" value="Juan Pérez" required>
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Número de teléfono</label>
-              <div class="input-wrap">
-                <i class="bi bi-telephone input-icon"></i>
-                <input type="tel" id="edit-numero" value="+505 8888 8888" required>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-grid mt-3">
-            <div class="form-group">
-              <label>Nombre del negocio</label>
-              <div class="input-wrap">
-                <i class="bi bi-building input-icon"></i>
-                <input type="text" id="edit-negocio" value="Tienda El Sol" required>
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Dirección</label>
-              <div class="input-wrap">
-                <i class="bi bi-geo-alt input-icon"></i>
-                <input type="text" id="edit-direccion" value="Del parque central 2C al norte" required>
-              </div>
-            </div>
-          </div>
-          
-          <div class="form-grid mt-3">
-            <div class="form-group">
-              <label>Estado del servicio</label>
-              <select id="edit-estado" class="form-select">
-                <option value="activo" selected>Activo</option>
-                <option value="inactivo">Inactivo</option>
-                <option value="mantenimiento">Mantenimiento</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Token de servicio (Protegido)</label>
-              <div class="input-wrap token-disabled">
-                <i class="bi bi-shield-lock input-icon"></i>
-                <input type="text" id="edit-token" value="PHNX-ABCD-1234-XYZ9" readonly>
-              </div>
-            </div>
-          </div>
-          
-          <div class="form-actions mt-4">
-            <button type="button" class="btn-ghost" id="btn-cancelar-modal">Cancelar</button>
-            <button type="submit" class="btn-primary" id="btn-guardar-modal"><i class="bi bi-floppy"></i> Guardar Cambios</button>
-          </div>
-        </form>
       </div>
     </div>
   </div>
 
-  </div> <!-- /servicios-wrapper -->
+  <!-- ══ MINI STATS (GRID 4x2) ══ -->
+  <div class="sv-stats-grid" id="sv-stats-row">
+    <!-- Stat 1 -->
+    <div class="sv-stat-card sv-card-glass">
+      <div class="sv-stat-top">
+        <div class="sv-stat-icon sv-icon-total"><i class="bi bi-collection-fill"></i></div>
+        <span class="sv-stat-label">Total Servicios</span>
+      </div>
+      <div class="sv-stat-value" id="sv-stat-total">—</div>
+    </div>
+    <!-- Stat 2 -->
+    <div class="sv-stat-card sv-card-glass">
+      <div class="sv-stat-top">
+        <div class="sv-stat-icon sv-icon-active"><i class="bi bi-check-circle-fill"></i></div>
+        <span class="sv-stat-label">Servicios Activos</span>
+      </div>
+      <div class="sv-stat-value" id="sv-stat-activos">—</div>
+    </div>
+    <!-- Stat 3 -->
+    <div class="sv-stat-card sv-card-glass pulse-warning">
+      <div class="sv-stat-top">
+        <div class="sv-stat-icon sv-icon-warn"><i class="bi bi-clock-history"></i></div>
+        <span class="sv-stat-label">Por Vencer (< 5d)</span>
+      </div>
+      <div class="sv-stat-value" id="sv-stat-porvencer">—</div>
+    </div>
+    <!-- Stat 4 -->
+    <div class="sv-stat-card sv-card-glass pulse-danger">
+      <div class="sv-stat-top">
+        <div class="sv-stat-icon sv-icon-inactive"><i class="bi bi-x-circle-fill"></i></div>
+        <span class="sv-stat-label">Servicios Vencidos</span>
+      </div>
+      <div class="sv-stat-value" id="sv-stat-vencidos">—</div>
+    </div>
+    <!-- Stat 5 (Row 2) -->
+    <div class="sv-stat-card sv-card-glass">
+      <div class="sv-stat-top">
+        <div class="sv-stat-icon sv-icon-renew"><i class="bi bi-arrow-repeat"></i></div>
+        <span class="sv-stat-label">Renovaciones (Mes)</span>
+      </div>
+      <div class="sv-stat-value" id="sv-stat-renovaciones">—</div>
+    </div>
+    <!-- Stat 6 (Row 2) -->
+    <div class="sv-stat-card sv-card-glass">
+      <div class="sv-stat-top">
+        <div class="sv-stat-icon sv-icon-new"><i class="bi bi-stars"></i></div>
+        <span class="sv-stat-label">Nuevos. (Mes)</span>
+      </div>
+      <div class="sv-stat-value" id="sv-stat-nuevos">—</div>
+    </div>
+    <!-- Stat 7 -->
+    <div class="sv-stat-card sv-card-glass">
+      <div class="sv-stat-top">
+        <div class="sv-stat-icon sv-icon-maint"><i class="bi bi-tools"></i></div>
+        <span class="sv-stat-label">En Mantenimiento</span>
+      </div>
+      <div class="sv-stat-value" id="sv-stat-mant">—</div>
+    </div>
+  </div>
+
+  <!-- ══ TABLA PRINCIPAL (DATAGRID) ══ -->
+  <div class="sv-card-glass sv-datagrid-card">
+    
+    <!-- Toolbar -->
+    <div class="sv-toolbar">
+      <div class="sv-tb-left">
+        <h2 class="sv-tb-title">Servicios Asignados <span class="sv-badge-count" id="sv-count-badge">0</span></h2>
+      </div>
+      <div class="sv-tb-right">
+        <div class="sv-search-box">
+          <i class="bi bi-search"></i>
+          <input type="text" id="sv-search" placeholder="Buscar ID, Cliente, Token..." autocomplete="off">
+          <button id="sv-search-clear"><i class="bi bi-x"></i></button>
+        </div>
+        <select id="sv-filter-estado" class="sv-tb-select">
+          <option value="">Filtro: Todos</option>
+          <option value="activo">Activos</option>
+          <option value="inactivo">Inactivos / Vencidos</option>
+          <option value="mantenimiento">Mantenimiento</option>
+          <option value="porvencer">Vencen pronto (5d)</option>
+        </select>
+        <select id="sv-sort" class="sv-tb-select">
+          <option value="vencimiento-asc">Vencen Antes ↑</option>
+          <option value="vencimiento-desc">Vencen Después ↓</option>
+          <option value="id-asc">ID ↑</option>
+          <option value="nombre-asc">Nombre A-Z</option>
+        </select>
+        <button class="sv-btn-icon" id="sv-btn-refresh" title="Verificar Reglas">
+          <i class="bi bi-arrow-repeat"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Wrapper de Tabla -->
+    <div class="sv-table-wrapper">
+      <table class="sv-table" id="sv-table">
+        <thead>
+          <tr>
+            <th width="70">ID</th>
+            <th>Cartera / Titular</th>
+            <th>Vigencia</th>
+            <th>Vencimiento</th>
+            <th>Estado Sistema</th>
+            <th align="right">Soporte</th>
+          </tr>
+        </thead>
+        <tbody id="sv-tbody">
+          <!-- JS Inject -->
+          <tr>
+            <td colspan="6" class="sv-empty-state">
+              <i class="bi bi-hourglass-split sv-spin"></i> Auditando servicios y vencimientos...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Footer Tabla -->
+    <div class="sv-toolbar-footer">
+      <span id="sv-result-count">Mostrando 0 asignaciones</span>
+    </div>
+  </div>
+
+</div> <!-- /sv-container -->
+
+<!-- ══ MODAL DE EDICIÓN & RENOVACIÓN ══ -->
+<div class="sv-modal-overlay" id="modal-editar">
+  <div class="sv-modal-card sv-card-glass">
+    <div class="sv-modal-header">
+      <h2><i class="bi bi-sliders"></i> Control de Suscripción</h2>
+      <button class="sv-btn-close" id="close-modal"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="sv-modal-body">
+      <form id="form-editar-servicio" class="sv-form" novalidate>
+        
+        <!-- Alerta de vencimiento en modal -->
+        <div id="modal-alerta-vencido" class="sv-alert-banner" style="display:none;">
+          <i class="bi bi-exclamation-triangle"></i> <span>El servicio actual se encuentra finalizado.</span>
+        </div>
+
+        <h3 class="sv-section-subtitle"><i class="bi bi-person-badge"></i> Titular del Servicio</h3>
+        <div class="sv-grid-2">
+          <div class="sv-input-group">
+            <label>Nombre Completo</label>
+            <div class="sv-input-control">
+              <i class="bi bi-person sv-input-icon"></i>
+              <input type="text" id="edit-nombre" required>
+            </div>
+          </div>
+          <div class="sv-input-group">
+            <label>Teléfono Respaldo</label>
+            <div class="sv-input-control">
+              <i class="bi bi-telephone sv-input-icon"></i>
+              <input type="tel" id="edit-numero" required>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="sv-section-subtitle"><i class="bi bi-calendar-range"></i> Ciclo de Facturación</h3>
+        <div class="sv-grid-2">
+          <div class="sv-input-group">
+            <label>Fecha de Inicio / Último Pago</label>
+            <div class="sv-input-control">
+              <i class="bi bi-calendar-event sv-input-icon"></i>
+              <input type="date" id="edit-inicio" required>
+            </div>
+          </div>
+          <div class="sv-input-group">
+            <label>Fecha Límite (Vencimiento)</label>
+            <div class="sv-input-control">
+              <i class="bi bi-calendar-x sv-input-icon"></i>
+              <input type="date" id="edit-vencimiento" required>
+            </div>
+            <p class="sv-input-hint" id="hint-dias-restantes">Calculando días restantes...</p>
+          </div>
+        </div>
+
+        <h3 class="sv-section-subtitle"><i class="bi bi-toggles"></i> Reglas de Corte</h3>
+        <div class="sv-grid-2">
+          <div class="sv-input-group">
+            <label>Estado Forzado</label>
+            <select id="edit-estado" class="sv-tb-select" style="width:100%">
+              <option value="activo">Activo (Forzar Alta)</option>
+              <option value="mantenimiento">Modo Mantenimiento</option>
+              <option value="inactivo">Inactivo / Detener</option>
+            </select>
+          </div>
+          <div class="sv-action-buttons">
+            <label>&nbsp;</label>
+            <button type="button" class="sv-btn-renew" id="btn-renovar-auto">
+              <i class="bi bi-arrow-clockwise"></i> Renovar +30 Días
+            </button>
+          </div>
+        </div>
+
+        <div class="sv-form-footer">
+          <button type="button" class="sv-btn-ghost" id="btn-cancelar-modal">Cancelar Cambios</button>
+          <button type="submit" class="sv-btn-primary" id="btn-guardar-modal">
+            <i class="bi bi-check2-all"></i> Aplicar al Sistema
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
