@@ -4,241 +4,302 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Phoenix — Mi Perfil</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../Assets/Css/perfil.css">
   </head>
   <body>
-    <!-- ══════════════════════════════════════════════
-         MÓDULO: MI PERFIL
-         Este fragmento es inyectado en #view-perfil
-         dentro de app.html por el router de app.js
-    ══════════════════════════════════════════════ -->
+    <!--
+      MÓDULO: MI PERFIL
+      Inyectado en #view-perfil por app.js → selector: .perfil-wrapper
+    -->
     <div class="perfil-wrapper">
 
-      <!-- ══ COLUMNA IZQUIERDA — Tarjeta Avatar ══ -->
-      <div class="perfil-sidebar-card">
+      <!-- ══ SIDEBAR IZQUIERDO — Avatar + Datos rápidos ══ -->
+      <aside class="pf-sidebar">
 
-        <!-- Avatar con botón de edición -->
-        <div class="perfil-avatar-wrap" id="perfil-avatar-wrap" title="Cambiar foto de perfil">
-          <div class="perfil-avatar" id="perfil-avatar-display">
-            <span id="perfil-avatar-initials">?</span>
-            <img id="perfil-avatar-img" src="" alt="Avatar" style="display:none;" />
+        <!-- Avatar -->
+        <div class="pf-avatar-zone" title="Cambiar foto">
+          <div class="pf-avatar" id="pf-avatar-display">
+            <span id="pf-avatar-initials">?</span>
+            <img id="pf-avatar-img" src="" alt="Avatar" style="display:none;" />
           </div>
-          <label class="perfil-avatar-edit" for="input-avatar" title="Subir foto">
+          <label class="pf-avatar-cam" for="input-avatar">
             <i class="bi bi-camera-fill"></i>
           </label>
         </div>
-        <input type="file" id="input-avatar" accept="image/*" />
+        <input type="file" id="input-avatar" accept="image/*" style="display:none;" />
 
-        <!-- Info básica -->
-        <div>
-          <p class="perfil-user-name" id="sidebar-name">—</p>
-          <p class="perfil-user-email" id="sidebar-email">—</p>
-        </div>
-        <span class="perfil-user-role">
-          <i class="bi bi-shield-check-fill"></i> Propietario
-        </span>
-
-        <div class="perfil-divider"></div>
-
-        <!-- Mini estadísticas -->
-        <div class="perfil-mini-stats">
-          <div class="perfil-mini-stat">
-            <span class="perfil-mini-stat-label">
-              <i class="bi bi-calendar3"></i> Registro
-            </span>
-            <span class="perfil-mini-stat-val" id="mini-registro">—</span>
-          </div>
-          <div class="perfil-mini-stat">
-            <span class="perfil-mini-stat-label">
-              <i class="bi bi-clock"></i> Última sesión
-            </span>
-            <span class="perfil-mini-stat-val" id="mini-sesion">Ahora</span>
-          </div>
-          <div class="perfil-mini-stat">
-            <span class="perfil-mini-stat-label">
-              <i class="bi bi-activity"></i> Acciones
-            </span>
-            <span class="perfil-mini-stat-val" id="mini-acciones">0</span>
-          </div>
+        <!-- Nombre + email + rol badge -->
+        <div class="pf-sidebar-id">
+          <p class="pf-sidebar-name" id="pf-sidebar-name">—</p>
+          <p class="pf-sidebar-email" id="pf-sidebar-email">—</p>
+          <span class="pf-role-badge" id="pf-sidebar-role">
+            <i class="bi bi-shield-fill-check"></i> Administrador
+          </span>
         </div>
 
-        <div class="perfil-divider"></div>
+        <div class="pf-divider"></div>
 
-        <!-- Botón cerrar sesión rápido -->
-        <button class="perfil-btn perfil-btn-danger" id="perfil-logout-btn" style="width:100%; justify-content:center;">
+        <!-- KPIs rápidos -->
+        <div class="pf-kpis">
+          <div class="pf-kpi">
+            <i class="bi bi-people-fill"></i>
+            <div class="pf-kpi-info">
+              <span class="pf-kpi-val" id="pf-kpi-clientes">—</span>
+              <span class="pf-kpi-label">Clientes</span>
+            </div>
+          </div>
+          <div class="pf-kpi">
+            <i class="bi bi-lightning-charge-fill"></i>
+            <div class="pf-kpi-info">
+              <span class="pf-kpi-val" id="pf-kpi-acciones">—</span>
+              <span class="pf-kpi-label">Acciones</span>
+            </div>
+          </div>
+          <div class="pf-kpi">
+            <i class="bi bi-calendar3"></i>
+            <div class="pf-kpi-info">
+              <span class="pf-kpi-val" id="pf-kpi-registro">—</span>
+              <span class="pf-kpi-label">Registro</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pf-divider"></div>
+
+        <!-- Preferencias rápidas -->
+        <div class="pf-prefs">
+          <p class="pf-prefs-title"><i class="bi bi-sliders"></i> Preferencias</p>
+          <!-- Tema -->
+          <div class="pf-pref-row">
+            <div class="pf-pref-info">
+              <i class="bi bi-moon-stars-fill"></i>
+              <span>Tema oscuro</span>
+            </div>
+            <label class="pf-toggle">
+              <input type="checkbox" id="pref-dark-mode" checked />
+              <span class="pf-toggle-slider"></span>
+            </label>
+          </div>
+          <!-- Notificaciones -->
+          <div class="pf-pref-row">
+            <div class="pf-pref-info">
+              <i class="bi bi-bell-fill"></i>
+              <span>Notificaciones</span>
+            </div>
+            <label class="pf-toggle">
+              <input type="checkbox" id="pref-notifs" checked />
+              <span class="pf-toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="pf-divider"></div>
+
+        <!-- Logout -->
+        <button class="pf-btn pf-btn-danger" id="perfil-logout-btn">
           <i class="bi bi-box-arrow-right"></i> Cerrar sesión
         </button>
-      </div>
+      </aside>
 
       <!-- ══ COLUMNA DERECHA — Secciones ══ -->
-      <div class="perfil-main-col">
+      <main class="pf-main">
 
         <!-- ── 1. INFORMACIÓN PERSONAL ── -->
-        <div class="perfil-section-card">
-          <div class="perfil-section-header">
-            <h2 class="perfil-section-title">
-              <i class="bi bi-person-fill green"></i>
-              Información del usuario
+        <section class="pf-card">
+          <div class="pf-card-header">
+            <h2 class="pf-card-title">
+              <i class="bi bi-person-fill pf-icon-green"></i>
+              Información Personal
             </h2>
+            <span class="pf-card-badge pf-badge-editable">
+              <i class="bi bi-pencil-square"></i> Editable
+            </span>
           </div>
-          <div class="perfil-section-body">
-            <div class="perfil-form-grid">
-              <div class="perfil-form-group">
+          <div class="pf-card-body">
+            <div class="pf-form-grid">
+              <div class="pf-form-group">
                 <label for="perfil-nombre">Nombre completo</label>
-                <input class="perfil-input" type="text" id="perfil-nombre"
-                  placeholder="Tu nombre completo" autocomplete="name" />
+                <div class="pf-input-wrap">
+                  <i class="bi bi-person pf-iico"></i>
+                  <input class="pf-input" type="text" id="perfil-nombre" placeholder="Tu nombre completo" autocomplete="name" />
+                </div>
               </div>
-              <div class="perfil-form-group">
+              <div class="pf-form-group">
                 <label for="perfil-nickname">Usuario / Nickname</label>
-                <input class="perfil-input" type="text" id="perfil-nickname"
-                  placeholder="@tu_usuario" autocomplete="username" />
+                <div class="pf-input-wrap">
+                  <i class="bi bi-at pf-iico"></i>
+                  <input class="pf-input" type="text" id="perfil-nickname" placeholder="@tu_usuario" autocomplete="username" />
+                </div>
               </div>
-              <div class="perfil-form-group">
+              <div class="pf-form-group">
                 <label for="perfil-email">Correo electrónico</label>
-                <input class="perfil-input" type="email" id="perfil-email"
-                  placeholder="tu@correo.com" autocomplete="email" readonly />
+                <div class="pf-input-wrap">
+                  <i class="bi bi-envelope pf-iico"></i>
+                  <input class="pf-input" type="email" id="perfil-email" placeholder="tu@correo.com" readonly />
+                </div>
               </div>
-              <div class="perfil-form-group">
+              <div class="pf-form-group">
                 <label for="perfil-telefono">Teléfono</label>
-                <input class="perfil-input" type="tel" id="perfil-telefono"
-                  placeholder="+52 000 000 0000" autocomplete="tel" />
-              </div>
-              <div class="perfil-form-group form-group-full">
-                <label for="perfil-descripcion">Descripción personal</label>
-                <textarea class="perfil-textarea" id="perfil-descripcion"
-                  placeholder="Cuéntanos algo sobre ti…"></textarea>
+                <div class="pf-input-wrap">
+                  <i class="bi bi-telephone pf-iico"></i>
+                  <input class="pf-input" type="tel" id="perfil-telefono" placeholder="+505 0000 0000" autocomplete="tel" />
+                </div>
               </div>
             </div>
-            <div class="perfil-form-actions">
-              <button class="perfil-btn perfil-btn-secondary" id="btn-perfil-cancelar">
+            <div class="pf-form-actions">
+              <button class="pf-btn pf-btn-ghost" id="btn-perfil-cancelar">
                 <i class="bi bi-x"></i> Cancelar
               </button>
-              <button class="perfil-btn perfil-btn-primary" id="btn-perfil-guardar">
+              <button class="pf-btn pf-btn-primary" id="btn-perfil-guardar">
                 <i class="bi bi-floppy2-fill"></i> Guardar cambios
               </button>
             </div>
           </div>
-        </div>
+        </section>
 
-        <!-- ── 2. ESTADÍSTICAS ── -->
-        <div class="perfil-section-card">
-          <div class="perfil-section-header">
-            <h2 class="perfil-section-title">
-              <i class="bi bi-bar-chart-fill blue"></i>
-              Estadísticas del usuario
+        <!-- ── 2. ROL Y ACCESO ── -->
+        <section class="pf-card">
+          <div class="pf-card-header">
+            <h2 class="pf-card-title">
+              <i class="bi bi-shield-fill-check pf-icon-blue"></i>
+              Rol y Nivel de Acceso
+            </h2>
+            <span class="pf-card-badge pf-badge-readonly">
+              <i class="bi bi-lock-fill"></i> Solo lectura
+            </span>
+          </div>
+          <div class="pf-card-body">
+            <div class="pf-info-grid">
+              <div class="pf-info-item">
+                <div class="pf-info-icon pf-ic-blue"><i class="bi bi-person-badge-fill"></i></div>
+                <div class="pf-info-data">
+                  <span class="pf-info-label">Tipo de usuario</span>
+                  <span class="pf-info-val" id="pf-rol-tipo">Administrador</span>
+                </div>
+              </div>
+              <div class="pf-info-item">
+                <div class="pf-info-icon pf-ic-green"><i class="bi bi-check2-all"></i></div>
+                <div class="pf-info-data">
+                  <span class="pf-info-label">Permisos</span>
+                  <span class="pf-info-val" id="pf-rol-permisos">Acceso total</span>
+                </div>
+              </div>
+              <div class="pf-info-item">
+                <div class="pf-info-icon pf-ic-yellow"><i class="bi bi-bar-chart-steps"></i></div>
+                <div class="pf-info-data">
+                  <span class="pf-info-label">Nivel de acceso</span>
+                  <span class="pf-info-val" id="pf-rol-nivel">Nivel 1 — Propietario</span>
+                </div>
+              </div>
+              <div class="pf-info-item">
+                <div class="pf-info-icon pf-ic-green"><i class="bi bi-toggles"></i></div>
+                <div class="pf-info-data">
+                  <span class="pf-info-label">Estado de cuenta</span>
+                  <span class="pf-info-val pf-status-active" id="pf-rol-estado">
+                    <i class="bi bi-circle-fill"></i> Activa
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── 3. INFORMACIÓN DEL SISTEMA ── -->
+        <section class="pf-card">
+          <div class="pf-card-header">
+            <h2 class="pf-card-title">
+              <i class="bi bi-hdd-network-fill pf-icon-yellow"></i>
+              Información del Sistema
             </h2>
           </div>
-          <div class="perfil-section-body">
-            <div class="perfil-stats-grid">
-              <div class="perfil-stat">
-                <div class="perfil-stat-icon green">
-                  <i class="bi bi-calendar-check-fill"></i>
-                </div>
-                <span class="perfil-stat-val" id="stat-fecha">—</span>
-                <span class="perfil-stat-label">Fecha de registro</span>
+          <div class="pf-card-body">
+            <div class="pf-sys-grid">
+              <div class="pf-sys-item">
+                <span class="pf-sys-label"><i class="bi bi-fingerprint"></i> ID de usuario</span>
+                <span class="pf-sys-val pf-mono" id="pf-sys-id">—</span>
               </div>
-              <div class="perfil-stat">
-                <div class="perfil-stat-icon blue">
-                  <i class="bi bi-lightning-charge-fill"></i>
-                </div>
-                <span class="perfil-stat-val" id="stat-acciones">0</span>
-                <span class="perfil-stat-label">Acciones realizadas</span>
+              <div class="pf-sys-item">
+                <span class="pf-sys-label"><i class="bi bi-calendar-plus"></i> Fecha de registro</span>
+                <span class="pf-sys-val" id="pf-sys-registro">—</span>
               </div>
-              <div class="perfil-stat">
-                <div class="perfil-stat-icon green">
-                  <i class="bi bi-clock-history"></i>
-                </div>
-                <span class="perfil-stat-val" id="stat-sesion">Ahora</span>
-                <span class="perfil-stat-label">Última conexión</span>
+              <div class="pf-sys-item">
+                <span class="pf-sys-label"><i class="bi bi-clock-history"></i> Última conexión</span>
+                <span class="pf-sys-val" id="pf-sys-sesion">Ahora</span>
               </div>
-            </div>
-
-            <!-- Actividad reciente -->
-            <h3 class="section-title" style="margin-top: 24px; margin-bottom: 12px;">
-              <i class="bi bi-activity"></i> Actividad reciente
-            </h3>
-            <div class="perfil-activity-list" id="perfil-activity-list">
-              <!-- Cargado dinámicamente por perfil.js -->
-              <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.85rem;">
-                <i class="bi bi-hourglass-split" style="font-size: 1.5rem; display:block; margin-bottom:8px;"></i>
-                Cargando actividad…
+              <div class="pf-sys-item">
+                <span class="pf-sys-label"><i class="bi bi-display"></i> Dispositivo actual</span>
+                <span class="pf-sys-val" id="pf-sys-device">—</span>
+              </div>
+              <div class="pf-sys-item">
+                <span class="pf-sys-label"><i class="bi bi-globe"></i> Navegador</span>
+                <span class="pf-sys-val" id="pf-sys-browser">—</span>
+              </div>
+              <div class="pf-sys-item">
+                <span class="pf-sys-label"><i class="bi bi-circle-fill"></i> Estado</span>
+                <span class="pf-sys-val pf-status-active" id="pf-sys-estado">
+                  <i class="bi bi-circle-fill"></i> En línea
+                </span>
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <!-- ── 3. CAMBIAR CONTRASEÑA ── -->
-        <div class="perfil-section-card">
-          <div class="perfil-section-header">
-            <h2 class="perfil-section-title">
-              <i class="bi bi-shield-lock-fill green"></i>
-              Seguridad del perfil
+        <!-- ── 4. ESTADÍSTICAS ── -->
+        <section class="pf-card">
+          <div class="pf-card-header">
+            <h2 class="pf-card-title">
+              <i class="bi bi-bar-chart-fill pf-icon-blue"></i>
+              Estadísticas del Usuario
             </h2>
           </div>
-          <div class="perfil-section-body">
-            <div class="perfil-security-list">
-              <!-- Cambiar contraseña -->
-              <div class="perfil-security-item">
-                <div class="perfil-security-icon green">
-                  <i class="bi bi-key-fill"></i>
-                </div>
-                <div class="perfil-security-info">
-                  <div class="perfil-security-title">Cambiar contraseña</div>
-                  <div class="perfil-security-desc">Actualiza tu contraseña de acceso al panel</div>
-                </div>
-                <button class="perfil-btn perfil-btn-secondary" id="btn-cambiar-password">
-                  <i class="bi bi-pencil"></i> Cambiar
-                </button>
+          <div class="pf-card-body">
+            <div class="pf-stats-grid">
+              <div class="pf-stat-card">
+                <div class="pf-stat-icon pf-ic-green"><i class="bi bi-people-fill"></i></div>
+                <div class="pf-stat-val" id="pf-stat-clientes">—</div>
+                <div class="pf-stat-label">Clientes creados</div>
               </div>
-
-              <!-- Sesiones activas -->
-              <div class="perfil-security-item">
-                <div class="perfil-security-icon blue">
-                  <i class="bi bi-display"></i>
-                </div>
-                <div class="perfil-security-info">
-                  <div class="perfil-security-title">Sesiones activas</div>
-                  <div class="perfil-security-desc">1 dispositivo conectado actualmente</div>
-                </div>
-                <button class="perfil-btn perfil-btn-secondary" id="btn-ver-sesiones">
-                  <i class="bi bi-eye"></i> Ver
-                </button>
+              <div class="pf-stat-card">
+                <div class="pf-stat-icon pf-ic-blue"><i class="bi bi-rocket-takeoff-fill"></i></div>
+                <div class="pf-stat-val" id="pf-stat-servicios">—</div>
+                <div class="pf-stat-label">Servicios gestionados</div>
               </div>
-
-              <!-- Cerrar todas las sesiones -->
-              <div class="perfil-security-item">
-                <div class="perfil-security-icon red">
-                  <i class="bi bi-door-closed-fill"></i>
-                </div>
-                <div class="perfil-security-info">
-                  <div class="perfil-security-title">Cerrar todas las sesiones</div>
-                  <div class="perfil-security-desc">Cierra sesión en todos los dispositivos</div>
-                </div>
-                <button class="perfil-btn perfil-btn-danger" id="btn-cerrar-sesiones">
-                  <i class="bi bi-x-circle"></i> Cerrar
-                </button>
+              <div class="pf-stat-card">
+                <div class="pf-stat-icon pf-ic-yellow"><i class="bi bi-lightning-charge-fill"></i></div>
+                <div class="pf-stat-val" id="pf-stat-acciones">—</div>
+                <div class="pf-stat-label">Acciones realizadas</div>
+              </div>
+              <div class="pf-stat-card">
+                <div class="pf-stat-icon pf-ic-purple"><i class="bi bi-activity"></i></div>
+                <div class="pf-stat-val" id="pf-stat-total">—</div>
+                <div class="pf-stat-label">Actividad total</div>
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <!-- ── 4. SESIONES ── (oculto por defecto, visible con btn-ver-sesiones) -->
-        <div class="perfil-section-card" id="perfil-sesiones-panel" style="display:none;">
-          <div class="perfil-section-header">
-            <h2 class="perfil-section-title">
-              <i class="bi bi-display blue"></i>
-              Sesiones activas
+        <!-- ── 5. ACTIVIDAD DEL USUARIO ── -->
+        <section class="pf-card">
+          <div class="pf-card-header">
+            <h2 class="pf-card-title">
+              <i class="bi bi-activity pf-icon-green"></i>
+              Actividad Reciente
             </h2>
+            <button class="pf-refresh-btn" id="pf-btn-refresh-activity" title="Actualizar">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
           </div>
-          <div class="perfil-section-body">
-            <div class="perfil-sessions-list" id="perfil-sessions-list">
-              <!-- Generado dinámicamente -->
+          <div class="pf-card-body">
+            <div class="pf-activity-list" id="perfil-activity-list">
+              <div class="pf-activity-loading">
+                <i class="bi bi-hourglass-split pf-spin"></i> Cargando actividad…
+              </div>
             </div>
           </div>
-        </div>
+        </section>
 
-      </div>
-      <!-- /perfil-main-col -->
-    </div>
-    <!-- /perfil-wrapper -->
+      </main>
+    </div><!-- /perfil-wrapper -->
   </body>
 </html>

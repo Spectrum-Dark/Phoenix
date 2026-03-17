@@ -20,7 +20,7 @@
         </div>
         <div class="cl-title-text">
           <h1>Directorio de Clientes</h1>
-          <p>Gestión avanzada de carteras y suscripciones.</p>
+          <p>Panel de monitoreo y consulta de la cartera activa.</p>
         </div>
       </div>
       <button class="cl-btn-primary" id="btn-toggle-form">
@@ -180,18 +180,17 @@
       <table class="cl-table" id="cl-table">
         <thead>
           <tr>
-            <th width="80">ID</th>
+            <th width="70">ID</th>
             <th>Cliente / Razón Social</th>
             <th>Contacto</th>
             <th>Suscripción</th>
             <th>Estado</th>
-            <th align="right">Acciones</th>
           </tr>
         </thead>
         <tbody id="cl-tbody">
           <!-- JS Inject -->
           <tr>
-            <td colspan="6" class="cl-empty-state">
+            <td colspan="5" class="cl-empty-state">
               <i class="bi bi-hourglass-split cl-spin"></i> Cargando clientes...
             </td>
           </tr>
@@ -204,82 +203,6 @@
       <span id="cl-result-count">Mostrando 0 registros</span>
     </div>
   </div>
-
-</div> <!-- /cl-container -->
-
-<!-- ══ MODAL DE EDICIÓN ══ -->
-<div class="cl-modal-overlay" id="modal-editar">
-  <div class="cl-modal-card cl-card-glass">
-    <div class="cl-modal-header">
-      <h2><i class="bi bi-pencil-square"></i> Modificar Cliente</h2>
-      <button class="cl-btn-close" id="close-modal"><i class="bi bi-x-lg"></i></button>
-    </div>
-    <div class="cl-modal-body">
-      <form id="form-editar-servicio" class="cl-form" novalidate>
-        
-        <div class="cl-grid-2">
-          <div class="cl-input-group">
-            <label>Nombre Completo</label>
-            <div class="cl-input-control">
-              <i class="bi bi-person cl-input-icon"></i>
-              <input type="text" id="edit-nombre" required>
-            </div>
-          </div>
-          <div class="cl-input-group">
-            <label>Teléfono</label>
-            <div class="cl-input-control">
-              <i class="bi bi-telephone cl-input-icon"></i>
-              <input type="tel" id="edit-numero" required>
-            </div>
-          </div>
-        </div>
-
-        <div class="cl-grid-2">
-          <div class="cl-input-group">
-            <label>Razón Social</label>
-            <div class="cl-input-control">
-              <i class="bi bi-building cl-input-icon"></i>
-              <input type="text" id="edit-negocio" required>
-            </div>
-          </div>
-          <div class="cl-input-group">
-            <label>Dirección</label>
-            <div class="cl-input-control">
-              <i class="bi bi-geo-alt cl-input-icon"></i>
-              <input type="text" id="edit-direccion" required>
-            </div>
-          </div>
-        </div>
-
-        <div class="cl-grid-2">
-          <div class="cl-input-group">
-            <label>Estado Operativo</label>
-            <select id="edit-estado" class="cl-tb-select" style="width:100%">
-              <option value="activo">Activo</option>
-              <option value="mantenimiento">Mantenimiento</option>
-              <option value="inactivo">Inactivo</option>
-            </select>
-          </div>
-          <div class="cl-input-group">
-            <label>Autenticación (Solo-Lectura)</label>
-            <div class="cl-input-control">
-              <i class="bi bi-shield-lock cl-input-icon"></i>
-              <input type="text" id="edit-token" class="cl-token-input" readonly>
-            </div>
-          </div>
-        </div>
-
-        <div class="cl-form-footer">
-          <button type="button" class="cl-btn-ghost" id="btn-cancelar-modal">Cancelar</button>
-          <button type="submit" class="cl-btn-primary" id="btn-guardar-modal">
-            <i class="bi bi-check2-circle"></i> Aplicar Cambios
-          </button>
-        </div>
-
-      </form>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>

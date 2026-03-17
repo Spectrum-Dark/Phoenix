@@ -1,23 +1,19 @@
 /**
  * ╔════════════════════════════════════════════════════════════════╗
- *  PHOENIX — clientes.js  (v2)
- *  Módulo: Gestión de Clientes
+ *  PHOENIX — clientes.js (v3 — Read-Only Monitor)
+ *  Módulo: Visualización de Clientes
  *
- *  - Formulario colapsable de registro
  *  - Firebase real-time listener (onValue) → tabla en vivo
- *  - Búsqueda en tiempo real (nombre / teléfono / negocio)
- *  - Filtro por estado
- *  - Ordenamiento (nombre, fecha, estado)
- *  - Edición inline con modal
- *  - Eliminación con confirmación
+ *  - Búsqueda en tiempo real (ID / nombre / teléfono / negocio)
+ *  - Filtro por estado + Ordenamiento
  *  - Mini-stats en tiempo real
+ *  - Formulario de registro (alta de nuevos clientes)
+ *  - SIN edición inline, SIN modal de edición, SIN eliminación
  * ╚════════════════════════════════════════════════════════════════╝
  */
 
 import {
   guardarCliente,
-  actualizarCliente,
-  eliminarCliente,
   tokenExiste,
   escucharClientes,
 } from './firebase.js';
@@ -39,8 +35,8 @@ const PhoenixToast = Swal.mixin({
 /* ──────────────────────────────────────────────────────────
    ESTADO INTERNO
 ────────────────────────────────────────────────────────── */
-let _todosLosClientes = [];   // cache de todos los clientes (de Firebase)
-let _unsubscribe = null;      // función para cancelar el listener Firebase
+let _todosLosClientes = [];   // caché de todos los clientes (de Firebase)
+let _unsubscribe      = null; // función para cancelar el listener Firebase
 
 /* ──────────────────────────────────────────────────────────
    ENTRY POINT — llamado desde app.js
@@ -95,13 +91,12 @@ function _initTokenGenerator() {
 }
 
 /* ──────────────────────────────────────────────────────────
-   FORMULARIO DE REGISTRO — FLUJO PRINCIPAL
+   FORMULARIO DE REGISTRO
 ────────────────────────────────────────────────────────── */
 function _initFormRegistro() {
   const form = document.getElementById('form-registro-cliente');
   if (!form) return;
 
-  // Evitar listeners duplicados al re-inicializar la vista
   form._abortCtrl?.abort();
   const ctrl = new AbortController();
   form._abortCtrl = ctrl;
@@ -141,7 +136,6 @@ function _initFormRegistro() {
 
       _setBtnEstado(btnGuardar, 'success');
       limpiarFormulario();
-      // Cerrar formulario tras éxito
       setTimeout(() => {
         document.getElementById('form-container').style.display = 'none';
         _setBtnEstado(btnGuardar, 'idle');
@@ -166,9 +160,7 @@ function _initFormRegistro() {
    FIREBASE — Listener en tiempo real
 ────────────────────────────────────────────────────────── */
 function _startListenerFirebase() {
-  // Cancelar listener anterior si existe
   if (_unsubscribe) { _unsubscribe(); _unsubscribe = null; }
-
   _renderEstado('loading');
 
   _unsubscribe = escucharClientes((clientes) => {
@@ -185,17 +177,14 @@ export function renderClientes() {
   const tbody = document.getElementById('cl-tbody');
   if (!tbody) return;
 
-  // ── Aplicar filtros ──
   const query  = (_val('cl-search') || '').toLowerCase();
   const estado = _val('cl-filter-estado') || '';
-  const orden  = document.getElementById('cl-sort')?.value || 'nombre-asc';
+  const orden  = document.getElementById('cl-sort')?.value || 'id-asc';
 
   let lista = _todosLosClientes.filter(c => {
-    // Filtro estado
     if (estado && (c.Estado || 'activo').toLowerCase() !== estado) return false;
-    // Filtro búsqueda
     if (query) {
-      const charId = c.cliente_id ? `#${c.cliente_id}` : '';
+      const charId  = c.cliente_id ? `#${c.cliente_id}` : '';
       const haystack = [charId, c.Nombre, c.Numero, c.Negocio, c.Direccion, c.Token]
         .join(' ').toLowerCase();
       if (!haystack.includes(query)) return false;
@@ -203,69 +192,61 @@ export function renderClientes() {
     return true;
   });
 
-  // ── Ordenar ──
   lista = _ordenar(lista, orden);
 
-  // ── Render ──
   if (lista.length === 0) {
     _renderEstado(query || estado ? 'no-results' : 'empty');
     _setResultCount(0, _todosLosClientes.length);
     return;
   }
 
-  // Ahora map solo genera el INNER HTML para mantener los data-id del TR generados después.
-  // Pero espera, ya construí el <tr> dentro de _crearFila.
   tbody.innerHTML = lista.map(c => _crearFila(c)).join('');
   _setResultCount(lista.length, _todosLosClientes.length);
-  _bindFilaEvents(lista);
 }
 
-/* ordenar */
+/* ── Ordenar ── */
 function _ordenar(lista, orden) {
   return [...lista].sort((a, b) => {
     switch (orden) {
       case 'id-asc':      return (a.cliente_id || 0) - (b.cliente_id || 0);
       case 'id-desc':     return (b.cliente_id || 0) - (a.cliente_id || 0);
       case 'nombre-asc':  return (a.Nombre || '').localeCompare(b.Nombre || '');
-      case 'nombre-desc': return (b.Nombre || '').localeCompare(a.Nombre || '');
       case 'fecha-desc':  return new Date(b.timestamp || 0) - new Date(a.timestamp || 0);
-      case 'fecha-asc':   return new Date(a.timestamp || 0) - new Date(b.timestamp || 0);
       case 'estado-asc':  return (a.Estado || '').localeCompare(b.Estado || '');
       default: return 0;
     }
   });
 }
 
-/* estados vacío / sin resultados / cargando */
+/* ── Estados: vacío / sin resultados / cargando ── */
 function _renderEstado(tipo) {
   const tbody = document.getElementById('cl-tbody');
   if (!tbody) return;
   const msgs = {
-    loading:    '<i class="bi bi-hourglass-split cl-spin"></i> Cargando clientes…',
-    empty:      '<i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:8px;"></i>No hay clientes registrados todavía.<br><small>Usa el botón <strong>Nuevo Cliente</strong> para comenzar.</small>',
+    loading:      '<i class="bi bi-hourglass-split cl-spin"></i> Conectando con Firebase…',
+    empty:        '<i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:8px;"></i>No hay clientes registrados todavía.<br><small>Usa el botón <strong>Nuevo Cliente</strong> para comenzar.</small>',
     'no-results': '<i class="bi bi-search"></i> Sin resultados para esta búsqueda.',
-    error:      '<i class="bi bi-exclamation-triangle-fill" style="color:var(--red);"></i> Error al cargar clientes. <a href="#" onclick="location.reload()" style="color:var(--green);margin-left:6px;">Reintentar</a>',
   };
-  tbody.innerHTML = `<tr><td colspan="6" class="cl-empty-state">${msgs[tipo] || ''}</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="5" class="cl-empty-state">${msgs[tipo] || ''}</td></tr>`;
 }
 
-/* fila de cliente adaptada al Rediseño SaaS */
+/* ── Fila de cliente (solo lectura) ── */
 function _crearFila(c) {
-  const customId= c.cliente_id !== undefined ? `#${c.cliente_id}` : '—';
-  const nombre  = _esc(c.Nombre   || '');
-  const numero  = _esc(c.Numero   || '');
-  const negocio = _esc(c.Negocio  || '');
-  const dir     = _esc(c.Direccion || '');
-  const token   = _esc(c.Token    || '');
-  const estado  = (c.Estado || 'activo').toLowerCase();
-  
-  const fecha = c.timestamp ? new Date(c.timestamp).toLocaleDateString('es-MX',
-    { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+  const customId = c.cliente_id !== undefined ? `#${c.cliente_id}` : '—';
+  const nombre   = _esc(c.Nombre    || '—');
+  const numero   = _esc(c.Numero    || '—');
+  const negocio  = _esc(c.Negocio   || '—');
+  const dir      = _esc(c.Direccion || '—');
+  const token    = _esc(c.Token     || '—');
+  const estado   = (c.Estado || 'activo').toLowerCase();
 
-  let clst = 'activo'; let icon = 'bi-check-circle-fill'; let lbl = 'Activo';
-  let avatarCls = '';
-  if (estado === 'mantenimiento') { clst = 'mantenimiento'; icon = 'bi-tools'; lbl = 'Mantenimiento'; avatarCls = 'maint'; }
-  else if (estado === 'inactivo') { clst = 'inactivo'; icon = 'bi-x-circle-fill'; lbl = 'Inactivo'; avatarCls = 'inact'; }
+  const fecha = c.timestamp
+    ? new Date(c.timestamp).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '—';
+
+  let clst = 'activo'; let icon = 'bi-check-circle-fill'; let lbl = 'Activo'; let avatarCls = '';
+  if (estado === 'mantenimiento') { clst = 'mantenimiento'; icon = 'bi-tools';         lbl = 'Mantenimiento'; avatarCls = 'maint'; }
+  else if (estado === 'inactivo') { clst = 'inactivo';      icon = 'bi-x-circle-fill'; lbl = 'Inactivo';      avatarCls = 'inact'; }
 
   const ini = nombre.length >= 2 ? nombre.substring(0, 2).toUpperCase() : nombre.toUpperCase();
 
@@ -292,112 +273,13 @@ function _crearFila(c) {
       <td data-label="Suscripción">
         <div class="cl-sub-info">
           <span class="cl-token-badge"><i class="bi bi-key"></i> ${token}</span>
-          <span class="cl-date" title="Modificado: ${c.ultimaActualizacion||''}"><i class="bi bi-calendar"></i> Alta: ${fecha}</span>
+          <span class="cl-date"><i class="bi bi-calendar3"></i> ${fecha}</span>
         </div>
       </td>
       <td data-label="Estado">
         <span class="cl-status ${clst}"><i class="bi ${icon}"></i> ${lbl}</span>
       </td>
-      <td data-label="Acciones">
-        <div class="cl-actions">
-          <button class="cl-action-btn edit edit-btn" data-id="${_esc(c.id)}" title="Editar">
-            <i class="bi bi-pencil-square"></i>
-          </button>
-          <button class="cl-action-btn delete delete-btn" data-id="${_esc(c.id)}" title="Eliminar">
-            <i class="bi bi-trash"></i>
-          </button>
-        </div>
-      </td>
     </tr>`;
-}
-
-/* ──────────────────────────────────────────────────────────
-   EVENTOS DE TABLA — editar / eliminar
-────────────────────────────────────────────────────────── */
-function _bindFilaEvents(lista) {
-  // ELIMINAR
-  document.querySelectorAll('.delete-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const id = btn.dataset.id;
-      const c  = lista.find(x => x.id === id) || {};
-      const res = await Phoenix.fire({
-        icon: 'warning', iconColor: '#F0A500',
-        title: `¿Eliminar a "${c.Nombre || id}"?`,
-        text: 'Esta acción no se puede deshacer.',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, eliminar',
-        confirmButtonColor: '#eb5757',
-        cancelButtonText: 'Cancelar',
-      });
-      if (!res.isConfirmed) return;
-      btn.disabled = true;
-      try {
-        await eliminarCliente(id);
-        PhoenixToast.fire({ icon: 'success', iconColor: '#17D7A0', title: 'Cliente eliminado' });
-        // El listener de Firebase actualiza la tabla automáticamente
-      } catch (err) {
-        btn.disabled = false;
-        Phoenix.fire({ icon: 'error', iconColor: '#eb5757', title: 'Error al eliminar' });
-      }
-    });
-  });
-
-  // EDITAR
-  document.querySelectorAll('.edit-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.dataset.id;
-      const c  = lista.find(x => x.id === id) || {};
-      _abrirModal(id, c);
-    });
-  });
-}
-
-/* ──────────────────────────────────────────────────────────
-   MODAL DE EDICIÓN
-────────────────────────────────────────────────────────── */
-function _abrirModal(id, c) {
-  const modal = document.getElementById('modal-editar');
-  if (!modal) return;
-
-  _setInputVal('edit-nombre',    c.Nombre    || '');
-  _setInputVal('edit-numero',    c.Numero    || '');
-  _setInputVal('edit-negocio',   c.Negocio   || '');
-  _setInputVal('edit-direccion', c.Direccion || '');
-  _setInputVal('edit-token',     c.Token     || '');
-  _setInputVal('edit-estado',    c.Estado    || 'activo');
-
-  modal.classList.add('show');
-
-  const close = () => modal.classList.remove('show');
-  document.getElementById('close-modal')?.addEventListener('click', close, { once: true });
-  document.getElementById('btn-cancelar-modal')?.addEventListener('click', close, { once: true });
-  modal.addEventListener('click', e => { if (e.target === modal) close(); }, { once: true });
-
-  // Clonar el form para limpiar listeners antiguos
-  const form = document.getElementById('form-editar-servicio');
-  const fresh = form.cloneNode(true);
-  form.parentNode.replaceChild(fresh, form);
-
-  fresh.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('btn-guardar-modal');
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Guardando…'; }
-    try {
-      await actualizarCliente(id, {
-        Nombre:    _val('edit-nombre'),
-        Numero:    _val('edit-numero'),
-        Negocio:   _val('edit-negocio'),
-        Direccion: _val('edit-direccion'),
-        Estado:    _val('edit-estado'),
-      });
-      close();
-      PhoenixToast.fire({ icon: 'success', iconColor: '#17D7A0', title: 'Cliente actualizado' });
-      // La tabla se actualiza vía escucharClientes
-    } catch (err) {
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-floppy"></i> Guardar Cambios'; }
-      Phoenix.fire({ icon: 'error', iconColor: '#eb5757', title: 'Error al actualizar' });
-    }
-  });
 }
 
 /* ──────────────────────────────────────────────────────────
@@ -414,13 +296,13 @@ function _initBusqueda() {
   const clear = document.getElementById('cl-search-clear');
 
   input?.addEventListener('input', () => {
-    clear.style.display = input.value ? 'flex' : 'none';
+    if (clear) clear.style.display = input.value ? 'flex' : 'none';
     renderClientes();
   });
 
   clear?.addEventListener('click', () => {
     if (input) input.value = '';
-    clear.style.display = 'none';
+    if (clear) clear.style.display = 'none';
     renderClientes();
   });
 }
@@ -446,7 +328,7 @@ function _initRefreshBtn() {
 }
 
 /* ──────────────────────────────────────────────────────────
-   STATS MINI
+   MINI-STATS EN TIEMPO REAL
 ────────────────────────────────────────────────────────── */
 function _actualizarStats(clientes) {
   const activos = clientes.filter(c => (c.Estado || 'activo').toLowerCase() === 'activo').length;
@@ -469,20 +351,20 @@ function _setResultCount(visible, total) {
 }
 
 /* ──────────────────────────────────────────────────────────
-   VALIDACIÓN — igual que antes
+   VALIDACIÓN
 ────────────────────────────────────────────────────────── */
 export function validarFormulario({ nombre, numero, negocio, direccion, token }) {
   const e = [];
-  if (!nombre)          e.push({ campo: 'cliente-nombre',    msg: 'El nombre es obligatorio.' });
+  if (!nombre)           e.push({ campo: 'cliente-nombre',    msg: 'El nombre es obligatorio.' });
   else if (nombre.length < 3) e.push({ campo: 'cliente-nombre', msg: 'Mínimo 3 caracteres.' });
 
   const d = numero.replace(/[\s\-()+]/g, '');
-  if (!numero)          e.push({ campo: 'cliente-numero',    msg: 'El teléfono es obligatorio.' });
+  if (!numero)           e.push({ campo: 'cliente-numero',    msg: 'El teléfono es obligatorio.' });
   else if (!/^\d{7,15}$/.test(d)) e.push({ campo: 'cliente-numero', msg: 'Número inválido (7–15 dígitos).' });
 
-  if (!negocio)         e.push({ campo: 'negocio-nombre',    msg: 'El nombre del negocio es obligatorio.' });
-  if (!direccion)       e.push({ campo: 'negocio-direccion', msg: 'La dirección es obligatoria.' });
-  if (!token)           e.push({ campo: 'servicio-token',    msg: 'Genera un token antes de guardar.' });
+  if (!negocio)          e.push({ campo: 'negocio-nombre',    msg: 'El nombre del negocio es obligatorio.' });
+  if (!direccion)        e.push({ campo: 'negocio-direccion', msg: 'La dirección es obligatoria.' });
+  if (!token)            e.push({ campo: 'servicio-token',    msg: 'Genera un token antes de guardar.' });
   else if (!token.startsWith('PHNX-')) e.push({ campo: 'servicio-token', msg: 'Token inválido. Usa el botón Generar.' });
   return e;
 }
@@ -525,9 +407,8 @@ function _setBtnEstado(btn, estado) {
 /* ──────────────────────────────────────────────────────────
    HELPERS
 ────────────────────────────────────────────────────────── */
-function _val(id)       { return (document.getElementById(id)?.value || '').trim(); }
-function _setText(id,v) { const el = document.getElementById(id); if (el) el.textContent = v; }
-function _setInputVal(id, v) { const el = document.getElementById(id); if (el) el.value = v; }
+function _val(id)         { return (document.getElementById(id)?.value || '').trim(); }
+function _setText(id, v)  { const el = document.getElementById(id); if (el) el.textContent = v; }
 function _esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }

@@ -14,8 +14,15 @@
 import { initClientes } from './clientes.js';
 import { initServicios } from './servicios.js';
 import { initPerfil }    from './perfil.js';
-import { initConfiguraciones } from './configuraciones.js';
-import { Database } from './firebase.js';
+import { initConfiguraciones, cargarConfiguraciones, aplicarIdioma } from './configuraciones.js';
+import {
+  Database,
+  registrarActividadDash,
+  escucharActividadDash,
+  registrarAdminOnline,
+  marcarAdminOffline,
+  escucharAdminsOnline,
+} from './firebase.js';
 import {
   ref, get, onValue,
 } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js';
@@ -208,15 +215,41 @@ function setBarWidth(id, pct, delay = 0) {
 export async function initDashboard() {
   _listenClientes();
   _loadConfiguracion();
-  _loadActividad();
-  _setSystemStatus();
+  _listenActividadTiempoReal();
+  _listenAdminsOnline();
 
+  // Escuchar evento de login de auth.js (CustomEvent)
+  window.addEventListener('phoenix:login', async (e) => {
+    const { email } = e.detail || {};
+    if (!email) return;
+    const nombre = email.split('@')[0];
+    // Registrar presencia y loguear actividad
+    await registrarAdminOnline(email, nombre);
+    await registrarActividadDash(
+      'login',
+      `${nombre} inició sesión`,
+      'green'
+    );
+  }, { once: true });
+
+  // Escuchar evento de logout de auth.js
+  window.addEventListener('phoenix:logout', async (e) => {
+    const { email } = e.detail || {};
+    if (email) {
+      await marcarAdminOffline(email);
+      await registrarActividadDash('logout', `${email.split('@')[0]} cerró sesión`, 'yellow');
+    }
+  }, { once: true });
+
+  // Botón refrescar actividad (fuerza re-render manual del mismo stream)
   const btnRefresh = document.getElementById('btn-refresh-activity');
   if (btnRefresh) {
     btnRefresh.addEventListener('click', () => {
       const list = document.getElementById('dash-activity-list');
-      if (list) list.innerHTML = '<div class="dash-loading"><i class="bi bi-hourglass-split"></i> Actualizando...</div>';
-      _loadActividad();
+      if (list) list.innerHTML = '<div class="dash-loading"><i class="bi bi-hourglass-split"></i> Actualizando…</div>';
+      // El listener ya está activo; la próxima escritura actualizará automáticamente.
+      // Solo refrescamos visualmente para dar feedback inmediato.
+      setTimeout(() => _listenActividadTiempoReal(), 400);
     });
   }
 }
@@ -227,11 +260,32 @@ export async function initDashboard() {
 ────────────────────────────────────────────────────────── */
 function _listenClientes() {
   const clientesRef = ref(Database, 'Clientes');
+  let prevTotal = -1; // Para detectar nuevos clientes
 
   onValue(clientesRef, (snap) => {
     const data = snap.exists() ? snap.val() : {};
     const all  = Object.values(data);
     const total = all.length;
+
+    // Detectar si se agregó un nuevo cliente
+    if (prevTotal >= 0 && total > prevTotal) {
+      const diff = total - prevTotal;
+      registrarActividadDash(
+        'nuevo_cliente',
+        `${diff} nuevo${diff > 1 ? 's' : ''} cliente${diff > 1 ? 's' : ''} registrado${diff > 1 ? 's' : ''}`,
+        'green'
+      ).catch(() => {});
+    }
+    // Detectar si se eliminó un cliente
+    if (prevTotal >= 0 && total < prevTotal) {
+      const diff = prevTotal - total;
+      registrarActividadDash(
+        'eliminar_cliente',
+        `${diff} cliente${diff > 1 ? 's' : ''} eliminado${diff > 1 ? 's' : ''}`,
+        'red'
+      ).catch(() => {});
+    }
+    prevTotal = total;
 
     // Contar por estado
     let activos = 0, mant = 0, inact = 0;
@@ -301,9 +355,6 @@ function _listenClientes() {
     const badge = document.getElementById('dash-nuevos-mes-badge');
     if (badge) badge.textContent = `+${nuevosMes}`;
 
-    // ── Total registros en sistema ──
-    setText('sys-total-records', `${total} clientes`);
-
     // ── Top negocios ──
     _renderTopNegocios(negocioMap);
 
@@ -312,7 +363,6 @@ function _listenClientes() {
 
   }, (err) => {
     console.error('Dashboard: error leyendo Clientes', err);
-    _setOfflineStatus();
   });
 }
 
@@ -385,52 +435,106 @@ async function _loadConfiguracion() {
 }
 
 /* ──────────────────────────────────────────────────────────
-   ACTIVIDAD RECIENTE
-   Lee desde /Perfiles/{key}/actividad
+   ACTIVIDAD RECIENTE — TIEMPO REAL
+   Lee desde Firebase /actividad/ (ltimos 10 eventos, onValue)
 ────────────────────────────────────────────────────────── */
-async function _loadActividad() {
-  const adminEmail = JSON.parse(localStorage.getItem('Admin'));
-  if (!adminEmail) return;
+let _unsubActividad = null;
 
-  const key = adminEmail.replace(/[.#$[\]]/g, '_');
+function _listenActividadTiempoReal() {
+  // Limpiar listener previo si existe (ej: al refrescar)
+  if (_unsubActividad) { _unsubActividad(); _unsubActividad = null; }
 
-  try {
-    const snap = await get(ref(Database, `Perfiles/${key}/actividad`));
-    const actividad = snap.exists() ? snap.val() : [];
-
+  _unsubActividad = escucharActividadDash((eventos) => {
     const container = document.getElementById('dash-activity-list');
     if (!container) return;
 
-    // También añadimos eventos genéricos del sistema
-    const systemEvents = [
-      { desc: 'Sesión iniciada en Phoenix', time: 'Ahora mismo',   color: 'green' },
-      { desc: 'Dashboard cargado correctamente', time: 'Hace 1 s', color: 'blue'  },
-    ];
+    // Actualizar badge de conteo
+    const badge = document.getElementById('dash-activity-count');
+    if (badge) badge.textContent = eventos.length;
 
-    const merged = [...(Array.isArray(actividad) ? actividad : []), ...systemEvents].slice(0, 8);
-
-    if (merged.length === 0) {
-      container.innerHTML = '<div class="dash-loading"><i class="bi bi-inbox"></i> Sin actividad reciente</div>';
+    if (eventos.length === 0) {
+      container.innerHTML = '<div class="dash-loading"><i class="bi bi-inbox"></i> Sin actividad registrada aún</div>';
       return;
     }
 
-    container.innerHTML = merged.map(a => `
-      <div class="dash-activity-item">
-        <span class="dash-activity-dot ${a.color || 'green'}"></span>
-        <div class="dash-activity-info">
-          <div class="dash-activity-desc">${_escHtml(a.desc)}</div>
-          <div class="dash-activity-time">${_escHtml(a.time || '')}</div>
-        </div>
-      </div>
-    `).join('');
+    container.innerHTML = eventos.map(a => {
+      const horaFormateada = a.timestamp
+        ? new Date(a.timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+        : '';
+      const fechaFormateada = a.timestamp
+        ? new Date(a.timestamp).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })
+        : '';
+      const tiempoStr = a.timestamp ? `${fechaFormateada} · ${horaFormateada}` : '';
 
-  } catch (err) {
-    console.warn('Dashboard: no se pudo cargar actividad:', err);
-    const container = document.getElementById('dash-activity-list');
-    if (container) {
-      container.innerHTML = '<div class="dash-loading"><i class="bi bi-inbox"></i> Sin actividad</div>';
+      const colorDot = a.color || 'blue';
+      const iconMap  = {
+        login:           'bi-box-arrow-in-right',
+        logout:          'bi-box-arrow-right',
+        nuevo_cliente:   'bi-person-plus-fill',
+        eliminar_cliente:'bi-person-x-fill',
+        update:          'bi-pencil-fill',
+        desactivacion:   'bi-ban',
+        activacion:      'bi-check-circle-fill',
+        renovacion:      'bi-arrow-repeat',
+      };
+      const icon = iconMap[a.tipo] || 'bi-circle-fill';
+
+      return `
+        <div class="dash-activity-item">
+          <span class="dash-activity-dot ${colorDot}"></span>
+          <div class="dash-activity-info">
+            <div class="dash-activity-desc">
+              <i class="bi ${icon}" style="font-size:0.75rem;margin-right:4px;"></i>
+              ${_escHtml(a.desc || '')}
+            </div>
+            <div class="dash-activity-time">${tiempoStr}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  });
+}
+
+/* ──────────────────────────────────────────────────────────
+   ADMINISTRADORES ACTIVOS — TIEMPO REAL
+   Lee desde Firebase /Administradores_Online/ (onValue)
+────────────────────────────────────────────────────────── */
+function _listenAdminsOnline() {
+  escucharAdminsOnline((admins) => {
+    const container = document.getElementById('dash-admins-list');
+    const badge     = document.getElementById('dash-admins-count');
+    if (!container) return;
+
+    if (badge) badge.textContent = `${admins.length} online`;
+
+    if (admins.length === 0) {
+      container.innerHTML = '<div class="dash-loading"><i class="bi bi-person-slash"></i> Ningún administrador online</div>';
+      return;
     }
-  }
+
+    container.innerHTML = admins.map(admin => {
+      const nombre   = admin.nombre || admin.email || 'Admin';
+      const initials = nombre.substring(0, 2).toUpperCase();
+      const desde    = admin.desde
+        ? new Date(admin.desde).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+        : '';
+
+      return `
+        <div class="dash-admin-item">
+          <div class="dash-admin-avatar">
+            ${initials}
+            <span class="dash-online-dot"></span>
+          </div>
+          <div class="dash-admin-info">
+            <div class="dash-admin-name">${_escHtml(nombre)}</div>
+            <div class="dash-admin-role">Administrador</div>
+          </div>
+          <span class="dash-admin-status">• Activo</span>
+          ${desde ? `<span class="dash-admin-time">${desde}</span>` : ''}
+        </div>
+      `;
+    }).join('');
+  });
 }
 
 /* ──────────────────────────────────────────────────────────
@@ -467,39 +571,9 @@ function _renderTopNegocios(negocioMap) {
   }).join('');
 }
 
-/* ──────────────────────────────────────────────────────────
-   ESTADO DEL SISTEMA
-────────────────────────────────────────────────────────── */
-function _setSystemStatus() {
-  const lastUpdate = document.getElementById('sys-lastupdate');
-  if (lastUpdate) {
-    lastUpdate.textContent = new Date().toLocaleTimeString('es-MX', {
-      hour: '2-digit', minute: '2-digit',
-    });
-  }
-
-  // Test de conectividad Firebase haciendo una lectura simple
-  get(ref(Database, '.info/connected'))
-    .then(() => {
-      _setBadge('sys-firebase', 'Conectado', 'dash-badge-online');
-      _setBadge('sys-sync',     'Al día',    'dash-badge-online');
-    })
-    .catch(() => {
-      _setBadge('sys-firebase', 'Sin conexión', 'dash-badge-error');
-      _setBadge('sys-sync',     'Pendiente',    'dash-badge-warning');
-    });
-}
-
 function _setOfflineStatus() {
-  _setBadge('sys-firebase', 'Sin conexión', 'dash-badge-error');
-  _setBadge('sys-sync',     'Pendiente',    'dash-badge-warning');
-}
-
-function _setBadge(id, text, cls) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.textContent = text;
-  el.className = `dash-sys-badge ${cls}`;
+  // Placeholder - sistema manejado por listeners en tiempo real
+  console.warn('Dashboard: Firebase no disponible');
 }
 
 /* ──────────────────────────────────────────────────────────
@@ -558,6 +632,48 @@ function _escHtml(str) {
 }
 
 /* ──────────────────────────────────────────────────────────
-   ARRANQUE — Inicia el dashboard al cargar la página
+   ARRANQUE — Carga config global primero, luego el dashboard
 ────────────────────────────────────────────────────────── */
-initDashboard();
+async function _bootstrapConfig() {
+  const email = (() => { try { return JSON.parse(localStorage.getItem('Admin')); } catch { return null; } })();
+
+  // 1. Aplicar tema y config desde localStorage INMEDIATAMENTE (sin esperar Firebase)
+  //    para evitar flash de tema incorrecto.
+  const localCfg = (() => { try { return JSON.parse(localStorage.getItem('PhoenixConfig') || '{}'); } catch { return {}; } })();
+  const temaInicial = localCfg.tema || localStorage.getItem('PhoenixTheme') || 'dark';
+  if (temaInicial === 'light') document.body.classList.add('theme-light');
+  else if (temaInicial === 'auto') {
+    if (!window.matchMedia('(prefers-color-scheme: dark)').matches) document.body.classList.add('theme-light');
+  }
+
+  // 2. Cargar config completa desde Firebase (actualiza window.APP_CONFIG)
+  if (email) {
+    try {
+      const cfg = await cargarConfiguraciones(email);
+      window.APP_CONFIG = { tema: 'dark', idioma: 'es', fechaFormato: 'DD/MM/YYYY', timezone: 'America/Managua', ...cfg };
+      // Aplicar idioma global
+      if (cfg.idioma && cfg.idioma !== 'es') aplicarIdioma(cfg.idioma);
+    } catch (err) {
+      console.warn('_bootstrapConfig: Firebase no disponible, usando config local', err);
+      window.APP_CONFIG = { tema: 'dark', idioma: 'es', fechaFormato: 'DD/MM/YYYY', timezone: 'America/Managua', ...localCfg };
+    }
+  } else {
+    window.APP_CONFIG = { tema: 'dark', idioma: 'es', fechaFormato: 'DD/MM/YYYY', timezone: 'America/Managua', ...localCfg };
+  }
+
+  // 3. Escuchar cambios de config en tiempo real
+  window.addEventListener('phoenix:config-updated', (e) => {
+    const { tema, idioma } = e.detail || {};
+    if (tema) {
+      document.body.classList.toggle('theme-light', tema === 'light' ||
+        (tema === 'auto' && !window.matchMedia('(prefers-color-scheme: dark)').matches));
+    }
+    if (idioma) aplicarIdioma(idioma);
+    Object.assign(window.APP_CONFIG || {}, e.detail);
+  });
+
+  // 4. Lanzar el dashboard
+  initDashboard();
+}
+
+_bootstrapConfig();

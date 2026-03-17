@@ -29,12 +29,69 @@
   --transition:  0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ══ LIGHT THEME — overrides all CSS vars globally ══ */
+body.theme-light {
+  --bg:          #F0F2F7;
+  --bg-card:     #FFFFFF;
+  --bg-input:    #F8F9FC;
+  --border:      #E2E8F0;
+  --green:       #0EBF8C;
+  --green-dim:   rgba(14, 191, 140, 0.10);
+  --green-glow:  rgba(14, 191, 140, 0.20);
+  --blue:        #4259D4;
+  --blue-dim:    rgba(66, 89, 212, 0.10);
+  --blue-glow:   rgba(66, 89, 212, 0.20);
+  --text:        #1A202C;
+  --text-muted:  #64748B;
+  --text-subtle: #94A3B8;
+  --topbar-bg:   rgba(248, 249, 252, 0.88);
+}
+
+/* Topbar light-mode: nav active border must also update */
+body.theme-light .nav-item.active {
+  border-color: rgba(14, 191, 140, 0.20);
+}
+
+/* Stat card hover light shadow */
+body.theme-light .stat-card-clickable:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Skeleton shimmer adapts to light bg */
+body.theme-light .stat-skeleton {
+  background: linear-gradient(90deg, #E2E8F0 25%, #F0F2F7 50%, #E2E8F0 75%);
+  background-size: 600px 100%;
+}
+
+/* Dash activity/top-item items */
+body.theme-light .dash-activity-item,
+body.theme-light .dash-top-item,
+body.theme-light .dash-admin-item {
+  background: #F8F9FC;
+  border-color: #E2E8F0;
+}
+
+/* Quick cards hover */
+body.theme-light .quick-card:hover {
+  background: rgba(14, 191, 140, 0.04);
+  border-color: rgba(14, 191, 140, 0.25);
+}
+
+/* Scrollbar */
+body.theme-light ::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+}
+body.theme-light ::-webkit-scrollbar-track {
+  background: #F0F2F7;
+}
+
 html, body {
   height: 100%;
   font-family: 'Inter', system-ui, sans-serif;
   background-color: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* ══════════════════════════════
@@ -185,7 +242,7 @@ html, body {
 
 /* ── Topbar ── */
 .topbar {
-  background: rgba(22, 25, 29, 0.85);
+  background: var(--topbar-bg, rgba(22, 25, 29, 0.88));
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
@@ -197,6 +254,7 @@ html, body {
   position: sticky;
   top: 0;
   z-index: 100;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .topbar-left h2 {
@@ -359,7 +417,7 @@ html, body {
 ══════════════════════════════ */
 .stats-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin-bottom: 32px;
 }
@@ -553,7 +611,7 @@ html, body {
    RESPONSIVE
 ══════════════════════════════ */
 @media (max-width: 1200px) {
-  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .stats-row { grid-template-columns: repeat(3, 1fr); }
   .quick-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
@@ -566,7 +624,7 @@ html, body {
   .sidebar { display: none; }
   .page-content { padding: 20px 16px; }
   .topbar { padding: 0 16px; }
-  .stats-row { grid-template-columns: 1fr; gap: 10px; }
+  .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
   .quick-grid { grid-template-columns: repeat(2, 1fr); }
   .view-title { font-size: 1.35rem; }
 }
@@ -808,9 +866,11 @@ html, body {
   flex-shrink: 0;
   margin-top: 5px;
 }
-.dash-activity-dot.green { background: var(--green); box-shadow: 0 0 6px rgba(23,215,160,0.5); }
-.dash-activity-dot.blue  { background: var(--blue);  box-shadow: 0 0 6px rgba(81,107,235,0.4); }
-.dash-activity-dot.yellow { background: #F0A500; }
+.dash-activity-dot.green  { background: var(--green); box-shadow: 0 0 6px rgba(23,215,160,0.5); }
+.dash-activity-dot.blue   { background: var(--blue);  box-shadow: 0 0 6px rgba(81,107,235,0.4); }
+.dash-activity-dot.yellow { background: #F0A500; box-shadow: 0 0 5px rgba(240,165,0,0.4); }
+.dash-activity-dot.red    { background: #eb5757; box-shadow: 0 0 6px rgba(235,87,87,0.4); }
+.dash-activity-dot.orange { background: #F0A500; box-shadow: 0 0 5px rgba(240,165,0,0.4); }
 
 .dash-activity-info { flex: 1; min-width: 0; }
 .dash-activity-desc {
@@ -901,6 +961,114 @@ html, body {
   background: var(--bg-input);
   color: var(--text-muted);
   border: 1px solid var(--border);
+}
+
+/* ── Administradores Activos ── */
+.dash-admins-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color var(--transition);
+}
+.dash-admins-card:hover { border-color: rgba(23,215,160,0.12); }
+
+.dash-admins-count {
+  font-size: 0.7rem !important;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+
+.dash-admins-list {
+  padding: 8px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.dash-admins-list::-webkit-scrollbar { width: 4px; }
+.dash-admins-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.dash-admin-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
+  position: relative;
+}
+.dash-admin-item:hover {
+  border-color: rgba(23,215,160,0.2);
+  background: rgba(23,215,160,0.03);
+}
+
+.dash-admin-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--green));
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: white;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* Punto Online pulsante */
+.dash-online-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--green);
+  border: 2px solid var(--bg-input);
+  animation: pulseOnline 2s ease-in-out infinite;
+}
+@keyframes pulseOnline {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(23,215,160,0.5); }
+  50%       { transform: scale(1.05); box-shadow: 0 0 0 4px rgba(23,215,160,0); }
+}
+
+.dash-admin-info { flex: 1; min-width: 0; }
+.dash-admin-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dash-admin-role {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.dash-admin-status {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid rgba(23,215,160,0.2);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dash-admin-time {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 /* ── Recordatorios ── */

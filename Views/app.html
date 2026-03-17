@@ -121,7 +121,7 @@
               </div>
             </div>
 
-            <!-- ── Fila 1: Stats rápidas ── -->
+            <!-- ── Fila 1: Stats rápidas (3 cards) ── -->
             <div class="stats-row">
               <div class="stat-card stat-card-clickable" data-view="view-clientes" title="Ir a Clientes">
                 <div class="stat-card-icon green">
@@ -158,18 +158,6 @@
                     <span class="stat-skeleton"></span>
                   </span>
                   <span class="stat-card-label">Estado del negocio</span>
-                </div>
-              </div>
-
-              <div class="stat-card stat-card-clickable" data-view="view-ajustes" title="Ir a Configuraciones">
-                <div class="stat-card-icon blue">
-                  <i class="bi bi-shop"></i>
-                </div>
-                <div class="stat-card-body">
-                  <span class="stat-card-value" id="dash-negocio-nombre">
-                    <span class="stat-skeleton"></span>
-                  </span>
-                  <span class="stat-card-label">Negocio registrado</span>
                 </div>
               </div>
             </div>
@@ -260,52 +248,43 @@
               </div>
             </div>
 
-            <!-- ── Fila 4: Actividad + Sistema + Recordatorios ── -->
+            <!-- ── Fila 4: Actividad + Admins + Recordatorios ── -->
             <div class="dash-row-bottom">
 
-              <!-- Actividad reciente -->
+              <!-- Actividad reciente (tiempo real) -->
               <div class="dash-activity-card">
                 <div class="dash-card-header">
                   <h2 class="section-title" style="margin:0;">
                     <i class="bi bi-activity"></i> Actividad reciente
                   </h2>
-                  <button class="dash-icon-btn" id="btn-refresh-activity" title="Actualizar actividad">
-                    <i class="bi bi-arrow-clockwise"></i>
-                  </button>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span class="dash-badge-green" id="dash-activity-count" style="font-size:0.7rem;padding:2px 8px;border-radius:20px;">0</span>
+                    <button class="dash-icon-btn" id="btn-refresh-activity" title="Actualizar actividad">
+                      <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                  </div>
                 </div>
                 <div class="dash-activity-list" id="dash-activity-list">
                   <div class="dash-loading">
-                    <i class="bi bi-hourglass-split"></i> Cargando...
+                    <i class="bi bi-hourglass-split"></i> Conectando al log de eventos…
                   </div>
                 </div>
               </div>
 
-              <!-- Columna derecha: Estado + Recordatorios -->
+              <!-- Columna derecha: Admins Activos + Recordatorios -->
               <div class="dash-col-right">
 
-                <!-- Estado del sistema -->
-                <div class="dash-system-card">
+                <!-- ✨ NUEVO: Administradores activos -->
+                <div class="dash-admins-card">
                   <div class="dash-card-header">
                     <h2 class="section-title" style="margin:0;">
-                      <i class="bi bi-hdd-network"></i> Estado del sistema
+                      <i class="bi bi-person-check-fill"></i> Administradores activos
                     </h2>
+                    <span class="dash-admins-count dash-badge-green" id="dash-admins-count">0 online</span>
                   </div>
-                  <div class="dash-system-list">
-                    <div class="dash-system-row">
-                      <span class="dash-system-label"><i class="bi bi-wifi"></i> Firebase</span>
-                      <span class="dash-sys-badge dash-badge-online" id="sys-firebase">Verificando…</span>
-                    </div>
-                    <div class="dash-system-row">
-                      <span class="dash-system-label"><i class="bi bi-arrow-repeat"></i> Sincronización</span>
-                      <span class="dash-sys-badge dash-badge-online" id="sys-sync">Al día</span>
-                    </div>
-                    <div class="dash-system-row">
-                      <span class="dash-system-label"><i class="bi bi-clock-history"></i> Última actualiz.</span>
-                      <span class="dash-sys-badge dash-badge-neutral" id="sys-lastupdate">—</span>
-                    </div>
-                    <div class="dash-system-row">
-                      <span class="dash-system-label"><i class="bi bi-database"></i> Total registros</span>
-                      <span class="dash-sys-badge dash-badge-neutral" id="sys-total-records">—</span>
+                  <div class="dash-admins-list" id="dash-admins-list">
+                    <div class="dash-loading">
+                      <i class="bi bi-hourglass-split"></i> Verificando presencia…
                     </div>
                   </div>
                 </div>

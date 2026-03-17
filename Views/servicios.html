@@ -9,7 +9,7 @@
 </head>
 <body>
 
-<div class="sv-container">
+<div class="servicios-wrapper sv-container">
 
   <!-- ══ HEADER PREMIUM ══ -->
   <div class="sv-header-blur">
@@ -20,86 +20,188 @@
         </div>
         <div class="sv-title-text">
           <h1>Suscripciones</h1>
-          <p>Control automatizado de vencimientos y estados operativos.</p>
+          <p>Control automatizado de vencimientos y estados operativos en tiempo real.</p>
         </div>
       </div>
-      <!-- Panel de Alerta Inteligente (Se llena por JS si hay vencidos) -->
+      <!-- Panel de Alerta Inteligente -->
       <div class="sv-alert-panel" id="sv-alert-panel" style="display: none;">
         <i class="bi bi-exclamation-triangle-fill sv-alert-icon"></i>
         <div class="sv-alert-text">
-          <strong>Atención Escudo:</strong> <span id="sv-alert-count">0</span> servicios vencidos desactivados hoy.
+          <strong>Escudo Activo:</strong> <span id="sv-alert-count">0</span> servicios vencidos desactivados hoy.
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ══ MINI STATS (GRID 4x2) ══ -->
+  <!-- ══ MINI STATS (GRID 4 + 3) ══ -->
   <div class="sv-stats-grid" id="sv-stats-row">
-    <!-- Stat 1 -->
+    <!-- Stat 1 — Total -->
     <div class="sv-stat-card sv-card-glass">
       <div class="sv-stat-top">
         <div class="sv-stat-icon sv-icon-total"><i class="bi bi-collection-fill"></i></div>
         <span class="sv-stat-label">Total Servicios</span>
       </div>
       <div class="sv-stat-value" id="sv-stat-total">—</div>
+      <div class="sv-stat-sub">Todos los registros</div>
     </div>
-    <!-- Stat 2 -->
+    <!-- Stat 2 — Activos -->
     <div class="sv-stat-card sv-card-glass">
       <div class="sv-stat-top">
         <div class="sv-stat-icon sv-icon-active"><i class="bi bi-check-circle-fill"></i></div>
-        <span class="sv-stat-label">Servicios Activos</span>
+        <span class="sv-stat-label">Activos</span>
       </div>
       <div class="sv-stat-value" id="sv-stat-activos">—</div>
+      <div class="sv-stat-sub">Servicios vigentes</div>
     </div>
-    <!-- Stat 3 -->
+    <!-- Stat 3 — Por vencer -->
     <div class="sv-stat-card sv-card-glass pulse-warning">
       <div class="sv-stat-top">
         <div class="sv-stat-icon sv-icon-warn"><i class="bi bi-clock-history"></i></div>
-        <span class="sv-stat-label">Por Vencer (< 5d)</span>
+        <span class="sv-stat-label">Por Vencer</span>
       </div>
       <div class="sv-stat-value" id="sv-stat-porvencer">—</div>
+      <div class="sv-stat-sub">Menos de 5 días</div>
     </div>
-    <!-- Stat 4 -->
+    <!-- Stat 4 — Vencidos -->
     <div class="sv-stat-card sv-card-glass pulse-danger">
       <div class="sv-stat-top">
         <div class="sv-stat-icon sv-icon-inactive"><i class="bi bi-x-circle-fill"></i></div>
-        <span class="sv-stat-label">Servicios Vencidos</span>
+        <span class="sv-stat-label">Vencidos</span>
       </div>
       <div class="sv-stat-value" id="sv-stat-vencidos">—</div>
+      <div class="sv-stat-sub">Expirados / Inactivos</div>
     </div>
-    <!-- Stat 5 (Row 2) -->
+    <!-- Stat 5 — Renovaciones -->
     <div class="sv-stat-card sv-card-glass">
       <div class="sv-stat-top">
         <div class="sv-stat-icon sv-icon-renew"><i class="bi bi-arrow-repeat"></i></div>
-        <span class="sv-stat-label">Renovaciones (Mes)</span>
+        <span class="sv-stat-label">Renovaciones</span>
       </div>
       <div class="sv-stat-value" id="sv-stat-renovaciones">—</div>
+      <div class="sv-stat-sub">Este mes</div>
     </div>
-    <!-- Stat 6 (Row 2) -->
+    <!-- Stat 6 — Nuevos -->
     <div class="sv-stat-card sv-card-glass">
       <div class="sv-stat-top">
         <div class="sv-stat-icon sv-icon-new"><i class="bi bi-stars"></i></div>
-        <span class="sv-stat-label">Nuevos. (Mes)</span>
+        <span class="sv-stat-label">Nuevos</span>
       </div>
       <div class="sv-stat-value" id="sv-stat-nuevos">—</div>
+      <div class="sv-stat-sub">Incorporados este mes</div>
     </div>
-    <!-- Stat 7 -->
+    <!-- Stat 7 — Mantenimiento -->
     <div class="sv-stat-card sv-card-glass">
       <div class="sv-stat-top">
         <div class="sv-stat-icon sv-icon-maint"><i class="bi bi-tools"></i></div>
-        <span class="sv-stat-label">En Mantenimiento</span>
+        <span class="sv-stat-label">Mantenimiento</span>
       </div>
       <div class="sv-stat-value" id="sv-stat-mant">—</div>
+      <div class="sv-stat-sub">Pausados manualmente</div>
     </div>
   </div>
 
-  <!-- ══ TABLA PRINCIPAL (DATAGRID) ══ -->
+  <!-- ══ PANELES SECUNDARIOS: INGRESOS + ACTIVIDAD + SISTEMA ══ -->
+  <div class="sv-panels-row">
+
+    <!-- Panel: Ingresos Estimados -->
+    <div class="sv-panel-card sv-card-glass">
+      <div class="sv-panel-header">
+        <div class="sv-panel-title">
+          <i class="bi bi-cash-coin"></i>
+          <span>Ingresos Estimados</span>
+        </div>
+        <span class="sv-panel-badge sv-badge-green" id="sv-ingresos-status">Calculando…</span>
+      </div>
+      <div class="sv-revenue-grid">
+        <div class="sv-revenue-card">
+          <div class="sv-revenue-icon"><i class="bi bi-calendar-month"></i></div>
+          <div class="sv-revenue-info">
+            <span class="sv-revenue-label">Ingresos del Mes</span>
+            <span class="sv-revenue-value" id="sv-ingresos-mes">$0</span>
+          </div>
+        </div>
+        <div class="sv-revenue-card">
+          <div class="sv-revenue-icon sv-rev-total"><i class="bi bi-graph-up-arrow"></i></div>
+          <div class="sv-revenue-info">
+            <span class="sv-revenue-label">Total Acumulado</span>
+            <span class="sv-revenue-value sv-rev-total-val" id="sv-ingresos-total">$0</span>
+          </div>
+        </div>
+      </div>
+      <p class="sv-revenue-note" id="sv-revenue-note">Basado en el campo <code>precio_servicio</code> de cada cliente.</p>
+    </div>
+
+    <!-- Panel: Actividad Reciente -->
+    <div class="sv-panel-card sv-card-glass sv-panel-activity">
+      <div class="sv-panel-header">
+        <div class="sv-panel-title">
+          <i class="bi bi-activity"></i>
+          <span>Actividad Reciente</span>
+        </div>
+        <button class="sv-panel-refresh" id="sv-btn-refresh-activity" title="Actualizar actividad">
+          <i class="bi bi-arrow-clockwise"></i>
+        </button>
+      </div>
+      <div class="sv-activity-list" id="sv-activity-list">
+        <div class="sv-activity-empty">
+          <i class="bi bi-hourglass-split sv-spin"></i> Cargando actividad…
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel: Estado del Sistema -->
+    <div class="sv-panel-card sv-card-glass">
+      <div class="sv-panel-header">
+        <div class="sv-panel-title">
+          <i class="bi bi-hdd-network-fill"></i>
+          <span>Estado del Sistema</span>
+        </div>
+        <span class="sv-sys-last-update" id="sv-sys-lastupdate">--:--</span>
+      </div>
+      <div class="sv-sys-grid">
+        <div class="sv-sys-item">
+          <div class="sv-sys-icon sv-sys-firebase"><i class="bi bi-database-fill"></i></div>
+          <div class="sv-sys-info">
+            <span class="sv-sys-label">Firebase</span>
+            <span class="sv-sys-badge" id="sv-sys-firebase">Verificando…</span>
+          </div>
+        </div>
+        <div class="sv-sys-item">
+          <div class="sv-sys-icon sv-sys-sync"><i class="bi bi-cloud-check-fill"></i></div>
+          <div class="sv-sys-info">
+            <span class="sv-sys-label">Sincronización</span>
+            <span class="sv-sys-badge" id="sv-sys-sync">Verificando…</span>
+          </div>
+        </div>
+        <div class="sv-sys-item">
+          <div class="sv-sys-icon sv-sys-audit"><i class="bi bi-shield-check"></i></div>
+          <div class="sv-sys-info">
+            <span class="sv-sys-label">Auditoría</span>
+            <span class="sv-sys-badge sv-badge-online" id="sv-sys-audit">Activa</span>
+          </div>
+        </div>
+        <div class="sv-sys-item">
+          <div class="sv-sys-icon sv-sys-records"><i class="bi bi-people-fill"></i></div>
+          <div class="sv-sys-info">
+            <span class="sv-sys-label">Registros</span>
+            <span class="sv-sys-badge sv-badge-online" id="sv-sys-records">0 clientes</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /sv-panels-row -->
+
+  <!-- ══ TABLA PRINCIPAL (DATAGRID COMPLETO) ══ -->
   <div class="sv-card-glass sv-datagrid-card">
-    
+
     <!-- Toolbar -->
     <div class="sv-toolbar">
       <div class="sv-tb-left">
-        <h2 class="sv-tb-title">Servicios Asignados <span class="sv-badge-count" id="sv-count-badge">0</span></h2>
+        <h2 class="sv-tb-title">
+          Servicios Asignados
+          <span class="sv-badge-count" id="sv-count-badge">0</span>
+        </h2>
       </div>
       <div class="sv-tb-right">
         <div class="sv-search-box">
@@ -108,11 +210,11 @@
           <button id="sv-search-clear"><i class="bi bi-x"></i></button>
         </div>
         <select id="sv-filter-estado" class="sv-tb-select">
-          <option value="">Filtro: Todos</option>
+          <option value="">Todos los estados</option>
           <option value="activo">Activos</option>
           <option value="inactivo">Inactivos / Vencidos</option>
           <option value="mantenimiento">Mantenimiento</option>
-          <option value="porvencer">Vencen pronto (5d)</option>
+          <option value="porvencer">Vencen pronto (&lt;5d)</option>
         </select>
         <select id="sv-sort" class="sv-tb-select">
           <option value="vencimiento-asc">Vencen Antes ↑</option>
@@ -120,7 +222,7 @@
           <option value="id-asc">ID ↑</option>
           <option value="nombre-asc">Nombre A-Z</option>
         </select>
-        <button class="sv-btn-icon" id="sv-btn-refresh" title="Verificar Reglas">
+        <button class="sv-btn-icon" id="sv-btn-refresh" title="Verificar y Re-auditar">
           <i class="bi bi-arrow-repeat"></i>
         </button>
       </div>
@@ -131,114 +233,136 @@
       <table class="sv-table" id="sv-table">
         <thead>
           <tr>
-            <th width="70">ID</th>
-            <th>Cartera / Titular</th>
-            <th>Vigencia</th>
-            <th>Vencimiento</th>
-            <th>Estado Sistema</th>
-            <th align="right">Soporte</th>
+            <th>ID</th>
+            <th>Cliente</th>
+            <th>Teléfono</th>
+            <th>Negocio</th>
+            <th>Dirección</th>
+            <th>Token</th>
+            <th>F. Inicio</th>
+            <th>F. Vencimiento</th>
+            <th>Estado</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody id="sv-tbody">
-          <!-- JS Inject -->
           <tr>
-            <td colspan="6" class="sv-empty-state">
+            <td colspan="10" class="sv-empty-state">
               <i class="bi bi-hourglass-split sv-spin"></i> Auditando servicios y vencimientos...
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-    
+
     <!-- Footer Tabla -->
     <div class="sv-toolbar-footer">
       <span id="sv-result-count">Mostrando 0 asignaciones</span>
+      <span class="sv-footer-dot">·</span>
+      <span id="sv-footer-update">Última auditoría: —</span>
     </div>
   </div>
 
-</div> <!-- /sv-container -->
+  <!-- ══ MODAL DE EDICIÓN & RENOVACIÓN ══ -->
+  <div class="sv-modal-overlay" id="modal-editar">
+    <div class="sv-modal-card sv-card-glass">
+      <div class="sv-modal-header">
+        <h2><i class="bi bi-sliders"></i> Control de Suscripción</h2>
+        <button class="sv-btn-close" id="close-modal"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sv-modal-body">
+        <form id="form-editar-servicio" class="sv-form" novalidate>
 
-<!-- ══ MODAL DE EDICIÓN & RENOVACIÓN ══ -->
-<div class="sv-modal-overlay" id="modal-editar">
-  <div class="sv-modal-card sv-card-glass">
-    <div class="sv-modal-header">
-      <h2><i class="bi bi-sliders"></i> Control de Suscripción</h2>
-      <button class="sv-btn-close" id="close-modal"><i class="bi bi-x-lg"></i></button>
-    </div>
-    <div class="sv-modal-body">
-      <form id="form-editar-servicio" class="sv-form" novalidate>
-        
-        <!-- Alerta de vencimiento en modal -->
-        <div id="modal-alerta-vencido" class="sv-alert-banner" style="display:none;">
-          <i class="bi bi-exclamation-triangle"></i> <span>El servicio actual se encuentra finalizado.</span>
-        </div>
+          <!-- Alerta de vencido en modal -->
+          <div id="modal-alerta-vencido" class="sv-alert-banner" style="display:none;">
+            <i class="bi bi-exclamation-triangle"></i>
+            <span>El servicio actual se encuentra finalizado. Renueva para reactivar al cliente.</span>
+          </div>
 
-        <h3 class="sv-section-subtitle"><i class="bi bi-person-badge"></i> Titular del Servicio</h3>
-        <div class="sv-grid-2">
-          <div class="sv-input-group">
-            <label>Nombre Completo</label>
-            <div class="sv-input-control">
-              <i class="bi bi-person sv-input-icon"></i>
-              <input type="text" id="edit-nombre" required>
+          <div class="sv-modal-client-info" id="sv-modal-client-preview">
+            <!-- Filled by JS -->
+          </div>
+
+          <h3 class="sv-section-subtitle"><i class="bi bi-person-badge"></i> Titular del Servicio</h3>
+          <div class="sv-grid-2">
+            <div class="sv-input-group">
+              <label>Nombre Completo</label>
+              <div class="sv-input-control">
+                <i class="bi bi-person sv-input-icon"></i>
+                <input type="text" id="edit-nombre" required>
+              </div>
+            </div>
+            <div class="sv-input-group">
+              <label>Teléfono</label>
+              <div class="sv-input-control">
+                <i class="bi bi-telephone sv-input-icon"></i>
+                <input type="tel" id="edit-numero" required>
+              </div>
             </div>
           </div>
-          <div class="sv-input-group">
-            <label>Teléfono Respaldo</label>
-            <div class="sv-input-control">
-              <i class="bi bi-telephone sv-input-icon"></i>
-              <input type="tel" id="edit-numero" required>
-            </div>
-          </div>
-        </div>
 
-        <h3 class="sv-section-subtitle"><i class="bi bi-calendar-range"></i> Ciclo de Facturación</h3>
-        <div class="sv-grid-2">
-          <div class="sv-input-group">
-            <label>Fecha de Inicio / Último Pago</label>
-            <div class="sv-input-control">
-              <i class="bi bi-calendar-event sv-input-icon"></i>
-              <input type="date" id="edit-inicio" required>
+          <h3 class="sv-section-subtitle"><i class="bi bi-calendar-range"></i> Ciclo de Facturación</h3>
+          <div class="sv-grid-2">
+            <div class="sv-input-group">
+              <label>Fecha de Inicio / Último Pago</label>
+              <div class="sv-input-control">
+                <i class="bi bi-calendar-event sv-input-icon"></i>
+                <input type="date" id="edit-inicio" required>
+              </div>
+            </div>
+            <div class="sv-input-group">
+              <label>Fecha de Vencimiento</label>
+              <div class="sv-input-control">
+                <i class="bi bi-calendar-x sv-input-icon"></i>
+                <input type="date" id="edit-vencimiento" required>
+              </div>
+              <p class="sv-input-hint" id="hint-dias-restantes">Calculando días restantes...</p>
             </div>
           </div>
-          <div class="sv-input-group">
-            <label>Fecha Límite (Vencimiento)</label>
-            <div class="sv-input-control">
-              <i class="bi bi-calendar-x sv-input-icon"></i>
-              <input type="date" id="edit-vencimiento" required>
-            </div>
-            <p class="sv-input-hint" id="hint-dias-restantes">Calculando días restantes...</p>
-          </div>
-        </div>
 
-        <h3 class="sv-section-subtitle"><i class="bi bi-toggles"></i> Reglas de Corte</h3>
-        <div class="sv-grid-2">
-          <div class="sv-input-group">
-            <label>Estado Forzado</label>
-            <select id="edit-estado" class="sv-tb-select" style="width:100%">
-              <option value="activo">Activo (Forzar Alta)</option>
-              <option value="mantenimiento">Modo Mantenimiento</option>
-              <option value="inactivo">Inactivo / Detener</option>
-            </select>
+          <h3 class="sv-section-subtitle"><i class="bi bi-toggles"></i> Reglas de Corte</h3>
+          <div class="sv-grid-2">
+            <div class="sv-input-group">
+              <label>Estado Forzado</label>
+              <select id="edit-estado" class="sv-tb-select" style="width:100%">
+                <option value="activo">Activo (Forzar Alta)</option>
+                <option value="mantenimiento">Modo Mantenimiento</option>
+                <option value="inactivo">Inactivo / Detener</option>
+              </select>
+            </div>
+            <div class="sv-action-buttons">
+              <label>&nbsp;</label>
+              <button type="button" class="sv-btn-renew" id="btn-renovar-auto">
+                <i class="bi bi-arrow-clockwise"></i> Renovar +30 Días
+              </button>
+            </div>
           </div>
-          <div class="sv-action-buttons">
-            <label>&nbsp;</label>
-            <button type="button" class="sv-btn-renew" id="btn-renovar-auto">
-              <i class="bi bi-arrow-clockwise"></i> Renovar +30 Días
+
+          <!-- Precio del servicio -->
+          <div class="sv-input-group sv-precio-group">
+            <label><i class="bi bi-tag"></i> Precio del Servicio (opcional)</label>
+            <div class="sv-input-control">
+              <i class="bi bi-currency-dollar sv-input-icon"></i>
+              <input type="number" id="edit-precio" placeholder="Ej: 250" min="0" step="0.01">
+            </div>
+            <p class="sv-input-hint">Se usa para calcular ingresos estimados del panel.</p>
+          </div>
+
+          <div class="sv-form-footer">
+            <button type="button" class="sv-btn-ghost" id="btn-cancelar-modal">Cancelar Cambios</button>
+            <button type="submit" class="sv-btn-primary" id="btn-guardar-modal">
+              <i class="bi bi-check2-all"></i> Aplicar al Sistema
             </button>
           </div>
-        </div>
 
-        <div class="sv-form-footer">
-          <button type="button" class="sv-btn-ghost" id="btn-cancelar-modal">Cancelar Cambios</button>
-          <button type="submit" class="sv-btn-primary" id="btn-guardar-modal">
-            <i class="bi bi-check2-all"></i> Aplicar al Sistema
-          </button>
-        </div>
-
-      </form>
+        </form>
+      </div>
     </div>
   </div>
-</div>
+  <!-- /modal-editar -->
+
+</div><!-- /sv-container -->
+
 
 </body>
 </html>

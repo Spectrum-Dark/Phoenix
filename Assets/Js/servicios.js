@@ -1,23 +1,37 @@
 /**
  * ╔════════════════════════════════════════════════════════════════╗
- *  PHOENIX — servicios.js (SaaS Subscriptions Controller)
+ *  PHOENIX — servicios.js (SaaS Subscriptions Controller v2)
  *  Módulo: Gestión de Suscripciones y Vencimientos Auto-Asignados
- * 
- *  - Auditoría automática de fechas (+30 Días).
- *  - Desactivación forzada al vencer.
- *  - Interfaz de edición en línea de Fechas/Estados.
- *  - Panel de Estadísticas Avanzadas de control.
+ *
+ *  - calcularVencimiento()      → Fecha inicio + 30 días
+ *  - verificarServicios()       → Audita expirados y retorna reporte
+ *  - actualizarEstados()        → Actualiza en Firebase los vencidos
+ *  - obtenerMetricasServicios() → Calcula todas las métricas del panel
+ *  - Actividad Reciente         → Lee/escribe /ActividadServicios
+ *  - Ingresos Estimados         → Calcula ingresos basado en precio_servicio
+ *  - Estado del Sistema         → Verifica conectividad Firebase
  * ╚════════════════════════════════════════════════════════════════╝
  */
 
 import {
   obtenerClientes,
   escucharClientes,
-  actualizarCliente
+  actualizarCliente,
+  registrarActividad,
+  Database,
 } from './firebase.js';
+import {
+  ref, get, onValue, query, orderByChild, limitToLast,
+} from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js';
 
 /* ──────────────────────────────────────────────────────────
-   SWAL CONFIGURATION (Phoenix Premium Theme)
+   CONSTANTES Y CONFIGURACIÓN
+────────────────────────────────────────────────────────── */
+const DIAS_ALERTA   = 5;   // Umbral "Por vencer"
+const DIAS_CICLO    = 30;  // Días de renovación por defecto
+
+/* ──────────────────────────────────────────────────────────
+   SWEETALERT2 — Tema Phoenix
 ────────────────────────────────────────────────────────── */
 const Phoenix = Swal.mixin({
   background: '#14171C', color: '#E8ECF2',
@@ -31,332 +45,488 @@ const PhoenixToast = Swal.mixin({
 });
 
 /* ──────────────────────────────────────────────────────────
-   ESTADO INTERNO / CACHE
+   ESTADO INTERNO / CACHÉ
 ────────────────────────────────────────────────────────── */
-let _suscripciones = []; // Cache master in memory
-let _unsubscribe = null;
-let _auditStats = { vencidosDesactivadosHoy: 0 };
-const DIAS_ALERTA = 5;
-
-// Variables de UI compartidas
-const UI = {
-  tbody:        document.getElementById('sv-tbody'),
-  resultCount:  document.getElementById('sv-result-count'),
-  countBadge:   document.getElementById('sv-count-badge'),
-  // Stats
-  stTotal:      document.getElementById('sv-stat-total'),
-  stActivos:    document.getElementById('sv-stat-activos'),
-  stPorVencer:  document.getElementById('sv-stat-porvencer'),
-  stVencidos:   document.getElementById('sv-stat-vencidos'),
-  stRenov:      document.getElementById('sv-stat-renovaciones'),
-  stNuevos:     document.getElementById('sv-stat-nuevos'),
-  stMant:       document.getElementById('sv-stat-mant'),
-  // Search / Filtros
-  searchBox:    document.getElementById('sv-search'),
-  searchClr:    document.getElementById('sv-search-clear'),
-  filterState:  document.getElementById('sv-filter-estado'),
-  sortType:     document.getElementById('sv-sort'),
-  btnRefresh:   document.getElementById('sv-btn-refresh'),
-  // Alertas
-  alertPanel:   document.getElementById('sv-alert-panel'),
-  alertCount:   document.getElementById('sv-alert-count'),
-  // Modal Edit
-  modal:        document.getElementById('modal-editar'),
-  formEdit:     document.getElementById('form-editar-servicio'),
-  mdlBtnRenovar:document.getElementById('btn-renovar-auto'),
-  mdlBtnCancel: document.getElementById('btn-cancelar-modal'),
-  mdlBtnClose:  document.getElementById('close-modal'),
-  mdlAlertBanner: document.getElementById('modal-alerta-vencido'),
-  hintDiasRep:  document.getElementById('hint-dias-restantes')
-};
+let _suscripciones = [];  // Caché principal en memoria
+let _unsubscribe   = null;
+let _auditStats    = { vencidosDesactivadosHoy: 0 };
 
 /* ──────────────────────────────────────────────────────────
-   BOOTSTRAP PRINCIPAL
+   UI REFS — se resuelven dinámicamente (carga SPA)
+────────────────────────────────────────────────────────── */
+const $ = (id) => document.getElementById(id);
+
+/* ──────────────────────────────────────────────────────────
+   EXPORT: FUNCIONES PÚBLICAS / UTILITARIAS
+────────────────────────────────────────────────────────── */
+
+/**
+ * Calcula la fecha de vencimiento +DIAS_CICLO días a partir de una fecha inicio.
+ * @param {string|Date} fechaInicio
+ * @returns {string} ISO string de la fecha de vencimiento
+ */
+export function calcularVencimiento(fechaInicio) {
+  const d = new Date(fechaInicio);
+  d.setDate(d.getDate() + DIAS_CICLO);
+  return d.toISOString();
+}
+
+/**
+ * Verifica el estado de todos los servicios en la caché actual.
+ * @returns {Object} Reporte: { vencidos, porVencer, activos, total }
+ */
+export function verificarServicios() {
+  const hoy = new Date();
+  let vencidos = 0, porVencer = 0, activos = 0;
+
+  _suscripciones.forEach(s => {
+    if (s._calcStatus === 'vencido') vencidos++;
+    else if (s._calcStatus === 'porvencer') porVencer++;
+    else activos++;
+  });
+
+  return { vencidos, porVencer, activos, total: _suscripciones.length };
+}
+
+/**
+ * Actualiza en Firebase todos los clientes que están vencidos
+ * pero aún tienen estado "activo" en la base de datos.
+ * @returns {Promise<number>} Cantidad de registros actualizados
+ */
+export async function actualizarEstados() {
+  let actualizados = 0;
+  for (const sub of _suscripciones) {
+    if (sub._calcStatus === 'vencido' && (sub.Estado || 'activo').toLowerCase() === 'activo') {
+      try {
+        await actualizarCliente(sub.id, { Estado: 'inactivo' });
+        await registrarActividad({
+          tipo:    'desactivacion',
+          desc:    `Servicio de ${sub.Nombre} expiró y fue desactivado automáticamente`,
+          nombre:  sub.Nombre,
+          color:   'red',
+          time:    _tiempoRelativo(new Date()),
+        });
+        actualizados++;
+      } catch (e) {
+        console.error(`[Servicios] Error desactivando ${sub.id}:`, e);
+      }
+    }
+  }
+  return actualizados;
+}
+
+/**
+ * Calcula y retorna todas las métricas del panel de servicios.
+ * @param {Array} clientes - Lista de clientes con metadata procesada
+ * @returns {Object} Métricas completas
+ */
+export function obtenerMetricasServicios(clientes = _suscripciones) {
+  const hoy = new Date();
+  let activos = 0, porVencer = 0, vencidos = 0, maint = 0, nuevos = 0, renovados = 0;
+  let ingresosMes = 0, ingresosTotal = 0;
+
+  clientes.forEach(s => {
+    const fbEstado = (s.Estado || 'activo').toLowerCase();
+
+    if (fbEstado === 'mantenimiento') {
+      maint++;
+    } else if (fbEstado === 'inactivo' || s._calcStatus === 'vencido') {
+      vencidos++;
+    } else if (s._calcStatus === 'porvencer') {
+      porVencer++;
+    } else {
+      activos++;
+    }
+
+    // Nuevos el mes actual
+    if (s.timestamp) {
+      const ts = new Date(s.timestamp);
+      if (ts.getMonth() === hoy.getMonth() && ts.getFullYear() === hoy.getFullYear()) {
+        nuevos++;
+      }
+    }
+
+    // Renovaciones del mes (Facturacion_Inicio re-firmado este mes, distinto del mes de creación)
+    if (s.Facturacion_Inicio) {
+      const upd = new Date(s.Facturacion_Inicio);
+      if (
+        upd.getMonth() === hoy.getMonth() &&
+        upd.getFullYear() === hoy.getFullYear()
+      ) {
+        renovados++;
+      }
+    }
+
+    // Ingresos estimados
+    const precio = parseFloat(s.precio_servicio || 0);
+    if (precio > 0) {
+      ingresosTotal += precio;
+      // Cuenta como ingreso del mes si el servicio se inició/renovó este mes
+      if (s.Facturacion_Inicio) {
+        const fi = new Date(s.Facturacion_Inicio);
+        if (fi.getMonth() === hoy.getMonth() && fi.getFullYear() === hoy.getFullYear()) {
+          ingresosMes += precio;
+        }
+      } else if (s.timestamp) {
+        const ts = new Date(s.timestamp);
+        if (ts.getMonth() === hoy.getMonth() && ts.getFullYear() === hoy.getFullYear()) {
+          ingresosMes += precio;
+        }
+      }
+    }
+  });
+
+  return { activos, porVencer, vencidos, maint, nuevos, renovados, ingresosMes, ingresosTotal, total: clientes.length };
+}
+
+/* ──────────────────────────────────────────────────────────
+   ENTRY POINT — llamado desde app.js al cargar la vista
 ────────────────────────────────────────────────────────── */
 export function initServicios() {
   _initUIListeners();
+  _renderSistema();
   _startSubscriptionsListener();
+  _renderActividad();
 }
 
+/* ──────────────────────────────────────────────────────────
+   LISTENERS UI
+────────────────────────────────────────────────────────── */
 function _initUIListeners() {
-  // Listeners de búsqueda y filtrado
-  UI.searchBox?.addEventListener('input', () => {
-    UI.searchClr.style.display = UI.searchBox.value ? 'flex' : 'none';
-    _renderDataGrid();
-  });
-  UI.searchClr?.addEventListener('click', () => {
-    if(UI.searchBox) UI.searchBox.value = '';
-    UI.searchClr.style.display = 'none';
-    _renderDataGrid();
-  });
-  
-  UI.filterState?.addEventListener('change', _renderDataGrid);
-  UI.sortType?.addEventListener('change', _renderDataGrid);
+  const searchBox   = $('sv-search');
+  const searchClr   = $('sv-search-clear');
+  const filterState = $('sv-filter-estado');
+  const sortType    = $('sv-sort');
+  const btnRefresh  = $('sv-btn-refresh');
+  const btnRefAct   = $('sv-btn-refresh-activity');
 
-  // Forzar re-cálculo y parpadeo de Icono.
-  UI.btnRefresh?.addEventListener('click', () => {
-    const icon = document.querySelector('#sv-btn-refresh i');
+  searchBox?.addEventListener('input', () => {
+    if (searchClr) searchClr.style.display = searchBox.value ? 'flex' : 'none';
+    _renderDataGrid();
+  });
+
+  searchClr?.addEventListener('click', () => {
+    if (searchBox) searchBox.value = '';
+    if (searchClr) searchClr.style.display = 'none';
+    _renderDataGrid();
+  });
+
+  filterState?.addEventListener('change', _renderDataGrid);
+  sortType?.addEventListener('change', _renderDataGrid);
+
+  btnRefresh?.addEventListener('click', async () => {
+    const icon = btnRefresh.querySelector('i');
     if (icon) { icon.style.transition = 'transform .5s'; icon.style.transform = 'rotate(360deg)'; }
     setTimeout(() => { if (icon) icon.style.transform = 'rotate(0deg)'; }, 550);
     _auditAndRender();
   });
 
-  // Modal Bounds
-  const closeFn = () => UI.modal?.classList.remove('show');
-  UI.mdlBtnClose?.addEventListener('click', closeFn);
-  UI.mdlBtnCancel?.addEventListener('click', closeFn);
-  UI.modal?.addEventListener('click', e => { if (e.target === UI.modal) closeFn(); });
-
-  // Disparar fecha limite automatica en modal si el input de INICIO cambia
-  document.getElementById('edit-inicio')?.addEventListener('change', (e) => {
-    const limit = document.getElementById('edit-vencimiento');
-    if(limit && e.target.value) {
-       const fd = new Date(e.target.value);
-       fd.setDate(fd.getDate() + 30);
-       limit.value = fd.toISOString().split('T')[0];
-       _actualizarHintDiasRestantes();
-    }
+  btnRefAct?.addEventListener('click', () => {
+    const list = $('sv-activity-list');
+    if (list) list.innerHTML = '<div class="sv-activity-empty"><i class="bi bi-hourglass-split sv-spin"></i> Actualizando…</div>';
+    _renderActividad();
   });
 
+  // Modal — cerrado
+  const closeFn = () => $('modal-editar')?.classList.remove('show');
+  $('close-modal')?.addEventListener('click', closeFn);
+  $('btn-cancelar-modal')?.addEventListener('click', closeFn);
+  $('modal-editar')?.addEventListener('click', e => { if (e.target === $('modal-editar')) closeFn(); });
+
+  // Auto-calc fecha límite al cambiar inicio (binding global en modal)
+  document.getElementById('edit-inicio')?.addEventListener('change', e => {
+    const limit = $('edit-vencimiento');
+    if (limit && e.target.value) {
+      const fd = new Date(e.target.value);
+      fd.setDate(fd.getDate() + DIAS_CICLO);
+      limit.value = fd.toISOString().split('T')[0];
+      _actualizarHintDiasRestantes();
+    }
+  });
   document.getElementById('edit-vencimiento')?.addEventListener('change', _actualizarHintDiasRestantes);
+
+  // ✔ Delegación de eventos en tbody: detecta clic en cualquier botón .sv-open-edit
+  //   aunque las filas se re-rendericen sin reattach de listeners.
+  const tbody = $('sv-tbody');
+  if (tbody) {
+    tbody.addEventListener('click', e => {
+      const btn = e.target.closest('.sv-open-edit');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      const target = _suscripciones.find(x => x.id === id);
+      if (target) {
+        _openEditorContext(target);
+      } else {
+        console.warn('[Servicios] Cliente no encontrado en caché para id:', id);
+      }
+    });
+  }
 }
 
 /* ──────────────────────────────────────────────────────────
-   MOTOR LÓGICO: Listener y Auditoría (30 Dias / Vencimientos)
+   FIREBASE — Listener en tiempo real de Clientes
 ────────────────────────────────────────────────────────── */
 function _startSubscriptionsListener() {
   if (_unsubscribe) { _unsubscribe(); _unsubscribe = null; }
   _renderEstado('loading');
 
-  _unsubscribe = escucharClientes((clientesBase) => {
+  _unsubscribe = escucharClientes(async (clientesBase) => {
     _suscripciones = _procesarSuscripciones(clientesBase);
-    _auditAndRender();
+    await _auditAndRender();
   });
 }
 
-/** 
- * Añade la Metadata necesaria (Fechas calculadas de 30 dias si no existen)
- * a cada cliente leído desde Firebase.
- */
+/* ──────────────────────────────────────────────────────────
+   PROCESADOR DE SUSCRIPCIONES
+   Añade metadata de fechas calculadas a cada cliente
+────────────────────────────────────────────────────────── */
 function _procesarSuscripciones(clientes) {
   const hoy = new Date();
-  
-  return clientes.map(c => {
-    let inicio = c.Facturacion_Inicio ? new Date(c.Facturacion_Inicio) : (c.timestamp ? new Date(c.timestamp) : new Date());
-    let limite = c.Facturacion_Limite ? new Date(c.Facturacion_Limite) : new Date(inicio.getTime() + (30 * 24*60*60*1000));
-    
-    // Distancia Matemática
-    const msRestantes = limite.getTime() - hoy.getTime();
-    const diasRestantes = Math.ceil(msRestantes / (1000*60*60*24));
-    
-    // Etiquetas de Cálculo
-    let calcStatus = 'activo';
-    if(diasRestantes <= 0) calcStatus = 'vencido';
-    else if(diasRestantes <= DIAS_ALERTA) calcStatus = 'porvencer';
 
-    return {
-      ...c,
-      _dtInicio: inicio,
-      _dtLimite: limite,
-      _diasRest: diasRestantes,
-      _calcStatus: calcStatus
-    };
+  return clientes.map(c => {
+    let inicio = c.Facturacion_Inicio
+      ? new Date(c.Facturacion_Inicio)
+      : (c.timestamp ? new Date(c.timestamp) : new Date());
+
+    let limite = c.Facturacion_Limite
+      ? new Date(c.Facturacion_Limite)
+      : new Date(inicio.getTime() + (DIAS_CICLO * 24 * 60 * 60 * 1000));
+
+    const msRestantes  = limite.getTime() - hoy.getTime();
+    const diasRestantes = Math.ceil(msRestantes / (1000 * 60 * 60 * 24));
+
+    let calcStatus = 'activo';
+    if (diasRestantes <= 0)          calcStatus = 'vencido';
+    else if (diasRestantes <= DIAS_ALERTA) calcStatus = 'porvencer';
+
+    return { ...c, _dtInicio: inicio, _dtLimite: limite, _diasRest: diasRestantes, _calcStatus: calcStatus };
   });
 }
 
-/**
- * Recorre la base calculada y fuerza DESACTIVACIONES a Firebase si detectó clientes caídos
- * que sigan marcados como "Activos" en la nube. Luego renderiza el Grid.
- */
+/* ──────────────────────────────────────────────────────────
+   AUDITORÍA + RENDER COMPLETO
+────────────────────────────────────────────────────────── */
 async function _auditAndRender() {
-  // 1. Auditoría auto-desactivación
+  // 1. Auto-desactivación de vencidos
   _auditStats.vencidosDesactivadosHoy = 0;
-  
+
   for (const sub of _suscripciones) {
-    if (sub._calcStatus === 'vencido' && (sub.Estado || 'activo') === 'activo') {
+    if (sub._calcStatus === 'vencido' && (sub.Estado || 'activo').toLowerCase() === 'activo') {
       try {
-        console.warn(`[Auditoría]: El servicio de ${sub.Nombre} expiró. Desactivando suscripción.`);
-        await actualizarCliente(sub.id, { Estado: 'inactivo' }); // Firebase trigger loop again.
+        console.warn(`[Auditoría] ${sub.Nombre} expiró. Desactivando…`);
+        await actualizarCliente(sub.id, { Estado: 'inactivo' });
+        await registrarActividad({
+          tipo:  'desactivacion',
+          desc:  `${sub.Nombre} — servicio vencido desactivado automáticamente`,
+          nombre: sub.Nombre,
+          color: 'red',
+          time:  _tiempoRelativo(new Date()),
+        });
         _auditStats.vencidosDesactivadosHoy++;
       } catch (e) {
-         console.error(`Fallo auto-desactivando a ${sub.id}`);
+        console.error(`[Auditoría] Error desactivando ${sub.id}:`, e);
       }
     }
   }
 
-  // 2. Proyectar Alertas a UI si hubo auto-kills
-  if (_auditStats.vencidosDesactivadosHoy > 0 && UI.alertPanel) {
-    UI.alertCount.textContent = _auditStats.vencidosDesactivadosHoy;
-    UI.alertPanel.style.display = 'flex';
-  } else if(UI.alertPanel) {
-    UI.alertPanel.style.display = 'none';
+  // 2. Alerta en header si hubo desactivaciones
+  const alertPanel = $('sv-alert-panel');
+  const alertCount = $('sv-alert-count');
+  if (_auditStats.vencidosDesactivadosHoy > 0 && alertPanel) {
+    if (alertCount) alertCount.textContent = _auditStats.vencidosDesactivadosHoy;
+    alertPanel.style.display = 'flex';
+  } else if (alertPanel) {
+    alertPanel.style.display = 'none';
   }
 
-  // 3. Pintar DOM
+  // 3. Pintar métricas y tabla
   _updateDashboardStats();
   _renderDataGrid();
+  _updateSystemRecords();
+
+  // 4. Footer timestamp
+  const footerUpdate = $('sv-footer-update');
+  if (footerUpdate) {
+    footerUpdate.textContent = `Última auditoría: ${new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+  }
 }
 
 /* ──────────────────────────────────────────────────────────
-   CALCULADORA DE ESTADÍSTICAS
+   DASHBOARD STATS — Actualizar contadores
 ────────────────────────────────────────────────────────── */
 function _updateDashboardStats() {
-  let activos = 0, porVencer = 0, vencidos = 0, renovados = 0, nuevos = 0, maint = 0;
-  const hoy = new Date();
+  const m = obtenerMetricasServicios(_suscripciones);
 
-  _suscripciones.forEach(s => {
-    // Lectura cruda de Firebase (Lo que rige)
-    const fbEstado = (s.Estado || 'activo').toLowerCase();
-    
-    if (fbEstado === 'mantenimiento') maint++;
-    else if (fbEstado === 'inactivo' || s._calcStatus === 'vencido') vencidos++;
-    else if (s._calcStatus === 'porvencer') porVencer++;
-    else activos++;
+  _setText('sv-stat-total',       m.total);
+  _setText('sv-stat-activos',     m.activos);
+  _setText('sv-stat-porvencer',   m.porVencer);
+  _setText('sv-stat-vencidos',    m.vencidos);
+  _setText('sv-stat-mant',        m.maint);
+  _setText('sv-stat-nuevos',      m.nuevos);
+  _setText('sv-stat-renovaciones', m.renovados);
+  _setText('sv-count-badge',      m.total);
 
-    // Nuevos en el mes (Timestamp)
-    if(s.timestamp) {
-      const ts = new Date(s.timestamp);
-      if(ts.getMonth() === hoy.getMonth() && ts.getFullYear() === hoy.getFullYear()) nuevos++;
+  // Ingresos estimados
+  const fmtCurrency = (n) => {
+    return n > 0 ? `$${n.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}` : '$0';
+  };
+
+  _setText('sv-ingresos-mes',   fmtCurrency(m.ingresosMes));
+  _setText('sv-ingresos-total', fmtCurrency(m.ingresosTotal));
+
+  const ingresosStatus = $('sv-ingresos-status');
+  if (ingresosStatus) {
+    if (m.ingresosTotal > 0) {
+      ingresosStatus.textContent = 'Con datos';
+      ingresosStatus.className   = 'sv-panel-badge sv-badge-green';
+    } else {
+      ingresosStatus.textContent = 'Sin precios';
+      ingresosStatus.className   = 'sv-panel-badge sv-badge-dim';
     }
+  }
 
-    // Renovados en el mes (Ultima Actualización que modificó Facturación) -> Aproximado
-    if(s.Facturacion_Inicio) {
-      const upd = new Date(s.Facturacion_Inicio);
-      // Es una renovación del mes en curso pero que NO es igual a su mes de creacion original para contar ambas?
-      // O simplemente "Inicios re-firmados este mes"
-      if(upd.getMonth() === hoy.getMonth() && upd.getFullYear() === hoy.getFullYear()) renovados++;
-    }
-  });
+  const revenueNote = $('sv-revenue-note');
+  if (revenueNote && m.ingresosTotal === 0) {
+    revenueNote.innerHTML = 'Agrega <code>precio_servicio</code> a cada cliente en el modal para ver ingresos.';
+  }
+}
 
-  if(UI.stTotal) UI.stTotal.textContent = _suscripciones.length;
-  if(UI.stActivos) UI.stActivos.textContent = activos;
-  if(UI.stPorVencer) UI.stPorVencer.textContent = porVencer;
-  if(UI.stVencidos) UI.stVencidos.textContent = vencidos;
-  if(UI.stMant) UI.stMant.textContent = maint;
-  if(UI.stNuevos) UI.stNuevos.textContent = nuevos;
-  if(UI.stRenov) UI.stRenov.textContent = renovados;
-  
-  if(UI.countBadge) UI.countBadge.textContent = _suscripciones.length;
+function _updateSystemRecords() {
+  _setText('sv-sys-records', `${_suscripciones.length} clientes`);
 }
 
 /* ──────────────────────────────────────────────────────────
-   PINTAR TABLA GLASSMORPHISM (Table-to-Cards)
+   TABLA DATAGRID — Renderizado
 ────────────────────────────────────────────────────────── */
 function _renderDataGrid() {
-  if (!UI.tbody) return;
+  const tbody = $('sv-tbody');
+  if (!tbody) return;
 
-  const queryRaw = (UI.searchBox?.value || '').toLowerCase();
-  const filterEs = UI.filterState?.value || '';
-  const sortTyp  = UI.sortType?.value || 'vencimiento-asc';
+  const queryRaw  = ($('sv-search')?.value || '').toLowerCase();
+  const filterEs  = $('sv-filter-estado')?.value || '';
+  const sortTyp   = $('sv-sort')?.value || 'vencimiento-asc';
 
   // Filtrado
   let procesados = _suscripciones.filter(s => {
-    // Filto Query (Nombre, ID, Tel, Empresa)
-    if(queryRaw) {
-      const matchScope = `#${s.cliente_id} ${s.Nombre} ${s.Negocio} ${s.Token}`.toLowerCase();
-      if(!matchScope.includes(queryRaw)) return false;
+    if (queryRaw) {
+      const scope = `#${s.cliente_id} ${s.Nombre} ${s.Negocio} ${s.Token} ${s.Numero}`.toLowerCase();
+      if (!scope.includes(queryRaw)) return false;
     }
-    // Filtro Estado Selectbox
-    if(filterEs) {
+    if (filterEs) {
       const fbE = (s.Estado || 'activo').toLowerCase();
-      if(filterEs === 'activo' && (fbE !== 'activo' || s._calcStatus === 'vencido')) return false;
-      if(filterEs === 'inactivo' && (fbE !== 'inactivo' && s._calcStatus !== 'vencido')) return false;
-      if(filterEs === 'mantenimiento' && fbE !== 'mantenimiento') return false;
-      if(filterEs === 'porvencer' && s._calcStatus !== 'porvencer') return false;
+      if (filterEs === 'activo'        && (fbE !== 'activo' || s._calcStatus === 'vencido')) return false;
+      if (filterEs === 'inactivo'      && (fbE !== 'inactivo' && s._calcStatus !== 'vencido')) return false;
+      if (filterEs === 'mantenimiento' && fbE !== 'mantenimiento') return false;
+      if (filterEs === 'porvencer'     && s._calcStatus !== 'porvencer') return false;
     }
     return true;
   });
 
   // Ordenamiento
-  procesados.sort((a,b) => {
-    switch(sortTyp) {
-      case 'vencimiento-asc': return a._dtLimite.getTime() - b._dtLimite.getTime();
+  procesados.sort((a, b) => {
+    switch (sortTyp) {
+      case 'vencimiento-asc':  return a._dtLimite.getTime() - b._dtLimite.getTime();
       case 'vencimiento-desc': return b._dtLimite.getTime() - a._dtLimite.getTime();
-      case 'id-asc': return (a.cliente_id||0) - (b.cliente_id||0);
-      case 'nombre-asc': return (a.Nombre||'').localeCompare(b.Nombre||'');
+      case 'id-asc':           return (a.cliente_id || 0) - (b.cliente_id || 0);
+      case 'nombre-asc':       return (a.Nombre || '').localeCompare(b.Nombre || '');
       default: return 0;
     }
   });
 
-  // Pintar DOM
-  UI.tbody.innerHTML = '';
-  if (UI.resultCount) UI.resultCount.textContent = `Mostrando ${procesados.length} asignaciones`;
-
-  if(procesados.length === 0) {
+  // Render vacío
+  if (procesados.length === 0) {
     _renderEstado(queryRaw || filterEs ? 'no-results' : 'empty');
+    _setText('sv-result-count', 'Mostrando 0 asignaciones');
     return;
   }
 
   const fragment = document.createDocumentFragment();
   procesados.forEach(s => {
     const tr = document.createElement('tr');
-    tr.innerHTML = _domBuildRow(s);
+    tr.innerHTML = _buildRow(s);
     fragment.appendChild(tr);
   });
-  
-  UI.tbody.appendChild(fragment);
 
-  // Vincular Modal Openers en esta tabla viva
+  tbody.innerHTML = '';
+  tbody.appendChild(fragment);
+  _setText('sv-result-count', `Mostrando ${procesados.length} de ${_suscripciones.length} asignaciones`);
+
   _bindActionsDOM(procesados);
 }
 
-function _domBuildRow(s) {
-  const customId = s.cliente_id !== undefined ? `#${s.cliente_id}` : '—';
-  const realStatus = (s.Estado || 'activo').toLowerCase();
-  const dInicioStr = s._dtInicio.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
-  const dLimiteStr = s._dtLimite.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
-  
+/* ── Fila de la tabla ── */
+function _buildRow(s) {
+  const customId    = s.cliente_id !== undefined ? `#${s.cliente_id}` : '—';
+  const realStatus  = (s.Estado || 'activo').toLowerCase();
+  const dInicioStr  = _fmtDate(s._dtInicio);
+  const dLimiteStr  = _fmtDate(s._dtLimite);
+  const nombre      = _esc(s.Nombre    || '—');
+  const negocio     = _esc(s.Negocio   || '—');
+  const telefono    = _esc(s.Numero    || '—');
+  const direccion   = _esc(s.Direccion || '—');
+  const token       = _esc(s.Token     || '—');
+
   let labelEstado = 'Operativo'; let bgClass = 'activo'; let icon = 'bi-check-all';
-  let isVencida = false;
   let avaClass = '';
 
   if (realStatus === 'mantenimiento') {
     labelEstado = 'Mantenimiento'; bgClass = 'mantenimiento'; icon = 'bi-tools';
   } else if (realStatus === 'inactivo' || s._calcStatus === 'vencido') {
-    labelEstado = s._calcStatus === 'vencido' ? 'Vencida' : 'Inactiva'; 
-    bgClass = 'inactivo'; icon = 'bi-ban'; isVencida = true; avaClass = 'vencido';
+    labelEstado = s._calcStatus === 'vencido' ? 'Vencida' : 'Inactiva';
+    bgClass = 'inactivo'; icon = 'bi-ban'; avaClass = 'vencido';
   } else if (s._calcStatus === 'porvencer') {
-    labelEstado = 'Vence Pronto'; bgClass = 'porvencer'; icon = 'bi-exclamation-circle';
+    labelEstado = 'Vence Pronto'; bgClass = 'porvencer'; icon = 'bi-exclamation-circle'; avaClass = 'porvencer';
   }
 
   const ini = s.Nombre ? s.Nombre.substring(0, 2).toUpperCase() : '??';
 
-  let diasSpan = `<span class="sv-date-sub sv-date-danger">Corte forzado o expirado</span>`;
-  if(!isVencida) {
-     diasSpan = `<span class="sv-date-sub ${s._calcStatus==='porvencer'?'sv-date-warn':''}"><i class="bi bi-hourglass-bottom"></i> ${s._diasRest} días restantes</span>`;
-  }
+  const isVencida = (realStatus === 'inactivo' || s._calcStatus === 'vencido');
+  const diasSpan = isVencida
+    ? `<span class="sv-date-sub sv-date-danger">Corte forzado o expirado</span>`
+    : `<span class="sv-date-sub ${s._calcStatus === 'porvencer' ? 'sv-date-warn' : ''}"><i class="bi bi-hourglass-bottom"></i> ${s._diasRest}d restantes</span>`;
 
   return `
     <td data-label="ID">
       <span class="sv-id-badge">${customId}</span>
     </td>
-    <td data-label="Cartera / Titular">
+    <td data-label="Cliente">
       <div class="sv-td-user">
         <div class="sv-avatar ${avaClass}">${ini}</div>
         <div class="sv-user-data">
-          <span class="sv-user-name">${s.Nombre || '—'}</span>
-          <span class="sv-user-bzl">${s.Negocio || '—'}</span>
+          <span class="sv-user-name">${nombre}</span>
         </div>
       </div>
     </td>
-    <td data-label="Vigencia">
+    <td data-label="Teléfono">
+      <span class="sv-cell-phone"><i class="bi bi-telephone"></i> ${telefono}</span>
+    </td>
+    <td data-label="Negocio">
+      <span class="sv-user-bzl">${negocio}</span>
+    </td>
+    <td data-label="Dirección">
+      <span class="sv-cell-address" title="${direccion}">${direccion}</span>
+    </td>
+    <td data-label="Token">
+      <span class="sv-token-badge">${token}</span>
+    </td>
+    <td data-label="F. Inicio">
       <div class="sv-date-group">
         <span class="sv-date-main">${dInicioStr}</span>
-        <span class="sv-date-sub"><i class="bi bi-wallet2"></i> Ciclo Iniciado</span>
+        <span class="sv-date-sub"><i class="bi bi-wallet2"></i> Ciclo inicio</span>
       </div>
     </td>
-    <td data-label="Vencimiento">
+    <td data-label="F. Vencimiento">
       <div class="sv-date-group">
         <span class="sv-date-main">${dLimiteStr}</span>
         ${diasSpan}
       </div>
     </td>
-    <td data-label="Estado Sistema">
+    <td data-label="Estado">
       <span class="sv-status ${bgClass}"><i class="bi ${icon}"></i> ${labelEstado}</span>
     </td>
-    <td data-label="Soporte">
+    <td data-label="Acciones">
       <div class="sv-actions">
-        <button class="sv-action-btn edit sv-open-edit" data-id="${s.id}" title="Gestionar / Renovar">
+        <button class="sv-action-btn edit sv-open-edit" data-id="${_esc(s.id)}" title="Gestionar / Renovar">
           <i class="bi bi-gear-wide-connected"></i>
         </button>
       </div>
@@ -364,139 +534,286 @@ function _domBuildRow(s) {
   `;
 }
 
+/* ── Estados vacío / cargando ── */
 function _renderEstado(tipo) {
-  if (!UI.tbody) return;
+  const tbody = $('sv-tbody');
+  if (!tbody) return;
   const msgs = {
-    loading:    '<i class="bi bi-hourglass-split sv-spin"></i> Auditando cuentas de suscripción…',
-    empty:      '<i class="bi bi-folder-x" style="font-size:2rem;display:block;margin-bottom:8px;"></i>No hay clientes integrados al clúster de Servicios.',
-    'no-results': '<i class="bi bi-search"></i> Los filtros no retornaron asignaciones vigentes.',
+    loading:      '<i class="bi bi-hourglass-split sv-spin"></i> Auditando cuentas de suscripción…',
+    empty:        '<i class="bi bi-folder-x" style="font-size:2rem;display:block;margin-bottom:8px;"></i>No hay clientes integrados al clúster de servicios.<br><small>Registra clientes desde el módulo de Clientes.</small>',
+    'no-results': '<i class="bi bi-search"></i> Ningún cliente coincide con este filtro.',
   };
-  UI.tbody.innerHTML = `<tr><td colspan="6" class="sv-empty-state">${msgs[tipo] || ''}</td></tr>`;
+  const colspan = 10;
+  tbody.innerHTML = `<tr><td colspan="${colspan}" class="sv-empty-state">${msgs[tipo] || ''}</td></tr>`;
 }
 
 /* ──────────────────────────────────────────────────────────
-   MODAL: EDICIÓN Y RENOVACIÓN
+   MODAL — EDICIÓN & RENOVACIÓN
 ────────────────────────────────────────────────────────── */
-function _bindActionsDOM(coleccion) {
-  const btns = document.querySelectorAll('.sv-open-edit');
-  btns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.dataset.id;
-      const target = coleccion.find(x => x.id === id);
-      if(target) _openEditorContext(target);
-    });
-  });
+/**
+ * _bindActionsDOM — ya no es necesario; la delegación se registra una vez en _initUIListeners.
+ * Se mantiene como no-op para compatibilidad con cualquier llamada externa residual.
+ */
+function _bindActionsDOM(_coleccion) {
+  // La lógica se mañejá mediante delegación de eventos en sv-tbody (ver _initUIListeners).
 }
 
 function _openEditorContext(clienteObj) {
-  UI.modal.dataset.currentId = clienteObj.id; // Recordar objetivo
+  const modal = $('modal-editar');
+  if (!modal) {
+    console.error(
+      '[Servicios] #modal-editar no encontrado en el DOM.\n' +
+      'Asegúrate de que el modal esté DENTRO de .servicios-wrapper en servicios.html.'
+    );
+    return;
+  }
 
-  // Set Inputs Básicos
-  document.getElementById('edit-nombre').value = clienteObj.Nombre || '';
-  document.getElementById('edit-numero').value = clienteObj.Numero || '';
-  document.getElementById('edit-estado').value = (clienteObj.Estado || 'activo').toLowerCase();
+  modal.dataset.currentId = clienteObj.id;
 
-  // Set Fechas YYYY-MM-DD (para input date)
-  const pad = (n) => n.toString().padStart(2, '0');
+  // Preview del cliente en el modal
+  const preview = $('sv-modal-client-preview');
+  if (preview) {
+    const ini = clienteObj.Nombre ? clienteObj.Nombre.substring(0, 2).toUpperCase() : '??';
+    preview.innerHTML = `
+      <div class="sv-modal-avatar">${ini}</div>
+      <div>
+        <div class="sv-modal-client-name">${_esc(clienteObj.Nombre || '—')}</div>
+        <div class="sv-modal-client-meta">
+          <i class="bi bi-shop"></i> ${_esc(clienteObj.Negocio || '—')}
+          &nbsp;·&nbsp;
+          <i class="bi bi-geo-alt"></i> ${_esc(clienteObj.Direccion || '—')}
+        </div>
+      </div>
+    `;
+  }
+
+  // Poblar inputs
+  _setVal('edit-nombre',     clienteObj.Nombre    || '');
+  _setVal('edit-numero',     clienteObj.Numero    || '');
+  _setVal('edit-estado',     (clienteObj.Estado   || 'activo').toLowerCase());
+  _setVal('edit-precio',     clienteObj.precio_servicio || '');
+
+  const pad = n => n.toString().padStart(2, '0');
   const dIni = clienteObj._dtInicio;
   const dLim = clienteObj._dtLimite;
-  
-  document.getElementById('edit-inicio').value = `${dIni.getFullYear()}-${pad(dIni.getMonth()+1)}-${pad(dIni.getDate())}`;
-  document.getElementById('edit-vencimiento').value = `${dLim.getFullYear()}-${pad(dLim.getMonth()+1)}-${pad(dLim.getDate())}`;
+  _setVal('edit-inicio',      `${dIni.getFullYear()}-${pad(dIni.getMonth()+1)}-${pad(dIni.getDate())}`);
+  _setVal('edit-vencimiento', `${dLim.getFullYear()}-${pad(dLim.getMonth()+1)}-${pad(dLim.getDate())}`);
 
   _actualizarHintDiasRestantes();
 
-  // Advertencia de Vencido
-  if(clienteObj._calcStatus === 'vencido' || (clienteObj.Estado||'').toLowerCase() === 'inactivo') {
-      UI.mdlAlertBanner.style.display = 'flex';
-  } else {
-      UI.mdlAlertBanner.style.display = 'none';
+  // Alerta de vencido
+  const banner = $('modal-alerta-vencido');
+  if (banner) {
+    banner.style.display =
+      (clienteObj._calcStatus === 'vencido' || (clienteObj.Estado || '').toLowerCase() === 'inactivo')
+        ? 'flex' : 'none';
   }
 
-  // Prevenir Listeners Acumulativos clonando form central
-  const form = UI.formEdit;
+  // Clonar form para limpiar listeners acumulados
+  const form  = $('form-editar-servicio');
   const fresh = form.cloneNode(true);
   form.parentNode.replaceChild(fresh, form);
-  UI.formEdit = fresh; // Actualizar ref
-  
-  // Re-bind listeners de auto calculo
-  document.getElementById('edit-inicio')?.addEventListener('change', (e) => {
-    const limit = document.getElementById('edit-vencimiento');
-    if(limit && e.target.value) {
-       const fd = new Date(e.target.value); fd.setDate(fd.getDate() + 30);
-       limit.value = fd.toISOString().split('T')[0];
-       _actualizarHintDiasRestantes();
+
+  // Re-bind eventos del form clonado
+  $('edit-inicio')?.addEventListener('change', e => {
+    const limit = $('edit-vencimiento');
+    if (limit && e.target.value) {
+      const fd = new Date(e.target.value);
+      fd.setDate(fd.getDate() + DIAS_CICLO);
+      limit.value = fd.toISOString().split('T')[0];
+      _actualizarHintDiasRestantes();
     }
   });
-  document.getElementById('edit-vencimiento')?.addEventListener('change', _actualizarHintDiasRestantes);
+  $('edit-vencimiento')?.addEventListener('change', _actualizarHintDiasRestantes);
 
-  // Re-bind BOTONES del form clonado
-  const btnRenew = document.getElementById('btn-renovar-auto');
-  const btnSave  = document.getElementById('btn-guardar-modal');
-  const btnCll   = document.getElementById('btn-cancelar-modal');
-  const closeFn = () => UI.modal.classList.remove('show');
-  
-  btnCll?.addEventListener('click', closeFn);
+  const closeFn = () => modal.classList.remove('show');
+  $('btn-cancelar-modal')?.addEventListener('click', closeFn);
+  $('close-modal')?.addEventListener('click', closeFn);
 
-  // ---- Boton Renovar (One Click) ----
-  btnRenew?.addEventListener('click', () => {
-    const inpIni = document.getElementById('edit-inicio');
-    const inpLim = document.getElementById('edit-vencimiento');
-    const inpEst = document.getElementById('edit-estado');
-    
-    // Al renovar, el inicio es HOY, el vencimiento es en 30 Días y Estado Activo
-    const fd = new Date();
-    inpIni.value = `${fd.getFullYear()}-${pad(fd.getMonth()+1)}-${pad(fd.getDate())}`;
-    fd.setDate(fd.getDate() + 30);
-    inpLim.value = `${fd.getFullYear()}-${pad(fd.getMonth()+1)}-${pad(fd.getDate())}`;
-    inpEst.value = 'activo';
-    
-    UI.mdlAlertBanner.style.display = 'none';
+  // ── Botón Renovar +30 Días ──
+  $('btn-renovar-auto')?.addEventListener('click', () => {
+    const inpIni = $('edit-inicio');
+    const inpLim = $('edit-vencimiento');
+    const inpEst = $('edit-estado');
+
+    const hoy = new Date();
+    const fim = new Date(hoy);
+    fim.setDate(fim.getDate() + DIAS_CICLO);
+
+    inpIni.value = `${hoy.getFullYear()}-${pad(hoy.getMonth()+1)}-${pad(hoy.getDate())}`;
+    inpLim.value = `${fim.getFullYear()}-${pad(fim.getMonth()+1)}-${pad(fim.getDate())}`;
+    if (inpEst) inpEst.value = 'activo';
+
+    const banner = $('modal-alerta-vencido');
+    if (banner) banner.style.display = 'none';
     _actualizarHintDiasRestantes();
-    PhoenixToast.fire({ icon: 'info', title: 'Fechas extendidas +30 Días' });
+    PhoenixToast.fire({ icon: 'info', iconColor: '#17D7A0', title: 'Fechas extendidas +30 días' });
   });
 
-  // ---- SAVE A FIREBASE ----
-  UI.formEdit.addEventListener('submit', async (e) => {
+  // ── Guardar en Firebase ──
+  fresh.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if(btnSave) { btnSave.disabled=true; btnSave.innerHTML='<i class="bi bi-hourglass-split sv-spin"></i> Proyectando...';}
+    const btnSave = $('btn-guardar-modal');
+    if (btnSave) { btnSave.disabled = true; btnSave.innerHTML = '<i class="bi bi-hourglass-split sv-spin"></i> Proyectando…'; }
 
-    const dInicioT = document.getElementById('edit-inicio').value;
-    const dLimiteT = document.getElementById('edit-vencimiento').value;
+    const dInicioT     = $('edit-inicio')?.value;
+    const dLimiteT     = $('edit-vencimiento')?.value;
+    const nuevoEstado  = $('edit-estado')?.value || 'activo';
+    const precioNuevo  = parseFloat($('edit-precio')?.value || 0) || 0;
+    const estadoAnterior = (clienteObj.Estado || 'activo').toLowerCase();
 
-    const targetPayload = {
-      Nombre:             document.getElementById('edit-nombre').value,
-      Numero:             document.getElementById('edit-numero').value,
-      Estado:             document.getElementById('edit-estado').value,
-      Facturacion_Inicio: dInicioT ? new Date(dInicioT).toISOString() : clienteObj._dtInicio.toISOString(),
-      Facturacion_Limite: dLimiteT ? new Date(dLimiteT + 'T23:59:59').toISOString() : clienteObj._dtLimite.toISOString()  // Vence al final de ese dia
+    const payload = {
+      Nombre:             $('edit-nombre')?.value || clienteObj.Nombre,
+      Numero:             $('edit-numero')?.value || clienteObj.Numero,
+      Estado:             nuevoEstado,
+      Facturacion_Inicio: dInicioT ? new Date(dInicioT).toISOString()              : clienteObj._dtInicio.toISOString(),
+      Facturacion_Limite: dLimiteT ? new Date(dLimiteT + 'T23:59:59').toISOString(): clienteObj._dtLimite.toISOString(),
     };
 
+    if (precioNuevo > 0) payload.precio_servicio = precioNuevo;
+
     try {
-      await actualizarCliente(clienteObj.id, targetPayload);
+      await actualizarCliente(clienteObj.id, payload);
+
+      // Registrar tipo de evento en actividad
+      let tipoEvento = 'actualizacion';
+      let colorEvento = 'blue';
+      let descEvento  = `${clienteObj.Nombre} — datos actualizados`;
+
+      if (nuevoEstado === 'activo' && estadoAnterior !== 'activo') {
+        tipoEvento  = 'activacion';
+        colorEvento = 'green';
+        descEvento  = `${clienteObj.Nombre} — servicio reactivado`;
+      } else if (nuevoEstado === 'inactivo' && estadoAnterior !== 'inactivo') {
+        tipoEvento  = 'desactivacion';
+        colorEvento = 'red';
+        descEvento  = `${clienteObj.Nombre} — servicio desactivado manualmente`;
+      } else if (dInicioT && dInicioT !== `${pad(clienteObj._dtInicio.getFullYear())}-${pad(clienteObj._dtInicio.getMonth()+1)}-${pad(clienteObj._dtInicio.getDate())}`) {
+        tipoEvento  = 'renovacion';
+        colorEvento = 'green';
+        descEvento  = `${clienteObj.Nombre} — suscripción renovada +${DIAS_CICLO} días`;
+      }
+
+      await registrarActividad({ tipo: tipoEvento, desc: descEvento, nombre: clienteObj.Nombre, color: colorEvento, time: _tiempoRelativo(new Date()) });
+      _renderActividad(); // Refrescar actividad
+
       closeFn();
-      PhoenixToast.fire({ icon: 'success', iconColor: '#516BEB', title: 'Suscriptor actualizado con éxito.' });
-    } catch(err) {
-      if(btnSave) { btnSave.disabled=false; btnSave.innerHTML='<i class="bi bi-check2-all"></i> Aplicar al Sistema';}
-      Phoenix.fire({ icon: 'error', iconColor: '#FF4D4D', title: 'Error de Red' });
+      PhoenixToast.fire({ icon: 'success', iconColor: '#17D7A0', title: 'Suscriptor actualizado con éxito.' });
+    } catch (err) {
+      if (btnSave) { btnSave.disabled = false; btnSave.innerHTML = '<i class="bi bi-check2-all"></i> Aplicar al Sistema'; }
+      Phoenix.fire({ icon: 'error', iconColor: '#FF4D4D', title: 'Error al guardar', text: 'Verifica tu conexión a internet.' });
     }
   });
 
-  // Finally show modal
-  UI.modal.classList.add('show');
+  modal.classList.add('show');
 }
 
+/* ── Hint de días restantes en modal ── */
 function _actualizarHintDiasRestantes() {
-  const hp = document.getElementById('hint-dias-restantes');
-  const dVal = document.getElementById('edit-vencimiento')?.value;
-  if(hp && dVal) {
-     const lim = new Date(dVal);
-     const hoy = new Date();
-     const mss = lim.getTime() - hoy.getTime();
-     const dr = Math.ceil(mss / (1000*60*60*24));
+  const hp   = $('hint-dias-restantes');
+  const dVal = $('edit-vencimiento')?.value;
+  if (!hp || !dVal) return;
 
-     if(dr < 0) { hp.innerHTML = `<span style="color:var(--red); font-weight:700;">El servicio expiró hace ${Math.abs(dr)} días.</span>`; }
-     else if(dr === 0) { hp.innerHTML = `<span style="color:var(--yellow); font-weight:700;">Expira HOY a la medianoche.</span>`; }
-     else { hp.innerHTML = `<i class="bi bi-stopwatch"></i> Límite de operación: <strong>${dr} días naturales.</strong>`; }
+  const lim = new Date(dVal + 'T23:59:59');
+  const hoy = new Date();
+  const dr  = Math.ceil((lim.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (dr < 0) {
+    hp.innerHTML = `<span style="color:var(--red);font-weight:700;"><i class="bi bi-x-circle"></i> Expiró hace ${Math.abs(dr)} días.</span>`;
+  } else if (dr === 0) {
+    hp.innerHTML = `<span style="color:var(--yellow);font-weight:700;"><i class="bi bi-exclamation-circle"></i> Expira HOY a la medianoche.</span>`;
+  } else {
+    hp.innerHTML = `<i class="bi bi-stopwatch"></i> Límite de operación: <strong>${dr} días naturales.</strong>`;
   }
+}
+
+/* ──────────────────────────────────────────────────────────
+   ACTIVIDAD RECIENTE — Leer desde Firebase
+────────────────────────────────────────────────────────── */
+async function _renderActividad() {
+  const container = $('sv-activity-list');
+  if (!container) return;
+
+  try {
+    const q    = query(ref(Database, 'ActividadServicios'), orderByChild('timestamp'), limitToLast(8));
+    const snap = await get(q);
+
+    if (!snap.exists()) {
+      container.innerHTML = '<div class="sv-activity-empty"><i class="bi bi-inbox"></i> Sin actividad registrada</div>';
+      return;
+    }
+
+    const val    = snap.val();
+    const events = Object.values(val).reverse(); // Más reciente primero
+
+    container.innerHTML = events.map(a => `
+      <div class="sv-activity-item">
+        <span class="sv-activity-dot ${a.color || 'blue'}"></span>
+        <div class="sv-activity-info">
+          <div class="sv-activity-desc">${_esc(a.desc || '')}</div>
+          <div class="sv-activity-time">${_esc(a.time || _tiempoRelativo(new Date(a.timestamp || '')))}</div>
+        </div>
+      </div>
+    `).join('');
+
+  } catch (err) {
+    console.warn('[Servicios] Error cargando actividad:', err);
+    container.innerHTML = '<div class="sv-activity-empty"><i class="bi bi-wifi-off"></i> Sin conexión para cargar actividad</div>';
+  }
+}
+
+/* ──────────────────────────────────────────────────────────
+   ESTADO DEL SISTEMA
+────────────────────────────────────────────────────────── */
+function _renderSistema() {
+  // Timestamp última actualización
+  const lastUpdate = $('sv-sys-lastupdate');
+  if (lastUpdate) {
+    lastUpdate.textContent = `Actualizado: ${new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`;
+  }
+
+  // Verificar conectividad Firebase con una lectura ligera
+  get(ref(Database, '.info/connected'))
+    .then(() => {
+      _setSysBadge('sv-sys-firebase', 'Conectado', 'sv-badge-online');
+      _setSysBadge('sv-sys-sync',     'Al día',    'sv-badge-online');
+    })
+    .catch(() => {
+      _setSysBadge('sv-sys-firebase', 'Sin conexión', 'sv-badge-error');
+      _setSysBadge('sv-sys-sync',     'Pendiente',    'sv-badge-warn');
+    });
+}
+
+function _setSysBadge(id, text, cls) {
+  const el = $(id);
+  if (!el) return;
+  el.textContent = text;
+  el.className   = `sv-sys-badge ${cls}`;
+}
+
+/* ──────────────────────────────────────────────────────────
+   HELPERS GENERALES
+────────────────────────────────────────────────────────── */
+function _setText(id, val) { const el = $(id); if (el) el.textContent = val; }
+function _setVal(id, val)  { const el = $(id); if (el) el.value = val; }
+
+function _fmtDate(d) {
+  if (!d || isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function _esc(s) {
+  return String(s)
+    .replace(/&/g,  '&amp;')
+    .replace(/</g,  '&lt;')
+    .replace(/>/g,  '&gt;')
+    .replace(/"/g,  '&quot;');
+}
+
+function _tiempoRelativo(fecha) {
+  const diff = Math.floor((new Date() - fecha) / 1000);
+  if (diff < 60)   return 'Hace un momento';
+  if (diff < 3600) return `Hace ${Math.floor(diff / 60)} min`;
+  if (diff < 86400)return `Hace ${Math.floor(diff / 3600)} h`;
+  return fecha.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' });
 }
