@@ -144,72 +144,109 @@
       </div>
 
 
-      <!-- ═════════ TAB 3: CENTRO DE MENSAJES (Plantillas y Segmentación) ═════════ -->
+      <!-- ═════════ TAB 3: GESTOR DE CAMPAÑAS ═════════ -->
       <div class="tg-tab-pane" id="tab-mensajeria">
-        <div class="cl-card-glass tg-composer-card">
-          <h2 class="tg-card-title"><i class="bi bi-megaphone"></i> Creador de Campañas / Mensajes</h2>
+        <div class="tg-campaign-layout cl-card-glass" style="margin: 0; padding: 0;">
+          
+          <!-- Left: List of Campaigns -->
+          <div class="tg-campaign-sidebar">
+             <div class="tg-camp-header" style="padding: 24px; border-bottom: 1px solid var(--border-glass); display: flex; justify-content: space-between; align-items: center;">
+               <h3 style="margin: 0; font-size: 1.1rem;"><i class="bi bi- megaphone"></i> Campañas</h3>
+               <button class="cl-btn-primary btn-xs" id="btn-new-camp" style="padding: 6px 14px; border-radius: 6px;"><i class="bi bi-plus-lg"></i> Nueva</button>
+             </div>
+             <div class="tg-camp-list" id="tg-campaigns-list">
+                <!-- JS Inject -->
+                <div class="cl-empty-state" style="padding: 40px 20px; text-align:center; color: var(--text-muted);">
+                  <i class="bi bi-collection-play" style="font-size:2.5rem; display:block; margin-bottom:10px; opacity:0.5;"></i>
+                  <span>No hay campañas registradas.</span>
+                </div>
+             </div>
+          </div>
 
-          <form id="form-telegram-msg" class="cl-form" novalidate style="margin-top: 20px;">
-            <!-- Tramos -->
-            <div class="tg-form-row">
-              <!-- Columna Izquierda: Opciones de destino y plantillas -->
-              <div class="tg-form-col">
+          <!-- Right: Editor/Viewer -->
+          <div class="tg-campaign-editor" id="tg-campaign-editor">
+             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+               <h2 id="tg-camp-title-view" style="margin: 0; font-size: 1.4rem; color: var(--text-base); font-weight: 600;">Crear Nueva Campaña</h2>
+               <div style="display: flex; gap: 10px;">
+                  <button class="cl-btn-ghost btn-xs" id="btn-del-camp" style="display:none; color:var(--red)"><i class="bi bi-trash"></i></button>
+                  <button class="cl-btn-secondary btn-xs" id="btn-save-camp"><i class="bi bi-save"></i> Guardar Borrador</button>
+                  <button class="cl-btn-primary tg-btn-send" id="btn-send-camp" type="button" form="form-telegram-msg"><i class="bi bi-send-fill"></i> Lanzar Campaña</button>
+               </div>
+             </div>
 
-                <div class="cl-input-group">
-                  <label>Segmentación (¿A quién va dirigido?)</label>
+             <!-- Progress Area (Hidden by default) -->
+             <div class="tg-progress-container" id="tg-progress-container" style="display:none; margin-bottom: 24px;">
+                <div class="tg-progress-header">
+                  <h4><i class="bi bi-cloud-arrow-up cl-spin" style="margin-right: 8px;"></i> Enviando Campaña en Segundo Plano...</h4>
+                  <span id="tg-progress-text" style="font-weight: 600;">0 / 0</span>
+                </div>
+                <div class="cl-progress-bar">
+                  <div class="cl-progress-fill" id="tg-progress-fill" style="width: 0%;"></div>
+                </div>
+                <p class="tg-progress-hint">Puedes seguir usando el sistema. Te notificaremos al terminar.</p>
+             </div>
+
+             <form id="form-telegram-msg" class="cl-form" novalidate>
+                <input type="hidden" id="tg-camp-id">
+                
+                <div class="cl-input-group" style="margin-bottom: 24px;">
+                  <label>Nombre de la Campaña <span class="cl-req">*</span></label>
                   <div class="cl-input-control">
-                    <i class="bi bi-people cl-input-icon"></i>
-                    <select id="tg-msg-dest" required>
-                      <option value="todos">Todos los vinculados</option>
-                      <option value="activos">Solo activos (Sistema)</option>
-                      <option value="porvencer">Solo próximos a vencer (≤ 5 días)</option>
-                      <option value="vencidos">Solo vencidos o suspendidos</option>
-                    </select>
+                    <i class="bi bi-tag cl-input-icon"></i>
+                    <input type="text" id="tg-camp-name" placeholder="Ej. Promoción Fin de Año, Aviso de Mantenimiento..." required>
                   </div>
                 </div>
 
-                <div class="cl-input-group">
-                  <label>Plantillas Rápidas</label>
-                  <div class="cl-input-control">
-                    <i class="bi bi-file-text cl-input-icon"></i>
-                    <select id="tg-templates">
-                      <option value="">-- Redactar manualmente --</option>
-                      <option value="Aviso General">Aviso General (Mantenimiento)</option>
-                      <option value="Recordatorio de Pago">Recordatorio de Pago</option>
-                      <option value="Promocion">Promoción Especial</option>
-                    </select>
+                <!-- Tramos -->
+                <div class="tg-form-row">
+                  <div class="tg-form-col">
+                    <div class="cl-input-group">
+                      <label>Segmentación (¿A quién va dirigido?)</label>
+                      <div class="cl-input-control">
+                        <i class="bi bi-people cl-input-icon"></i>
+                        <select id="tg-msg-dest" required>
+                          <option value="todos">Todos los vinculados</option>
+                          <option value="activos">Solo activos (Sistema)</option>
+                          <option value="porvencer">Solo próximos a vencer (≤ 5 días)</option>
+                          <option value="vencidos">Solo vencidos o suspendidos</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="cl-input-group">
+                      <label>Plantillas Rápidas</label>
+                      <div class="cl-input-control">
+                        <i class="bi bi-file-text cl-input-icon"></i>
+                        <select id="tg-templates">
+                          <option value="">-- Redactar manualmente --</option>
+                          <option value="Aviso General">Aviso General (Mantenimiento)</option>
+                          <option value="Recordatorio de Pago">Recordatorio de Pago</option>
+                          <option value="Promocion">Promoción Especial</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="tg-vars-hint">
+                      <strong>Variables Disponibles:</strong>
+                      <span class="tg-var-badge">{nombre}</span>
+                      <span class="tg-var-badge">{negocio}</span>
+                      <span class="tg-var-badge">{vencimiento}</span>
+                      <p>Las variables se reemplazarán usando los datos de cada cliente de forma individual.</p>
+                    </div>
+                  </div>
+
+                  <div class="tg-form-col">
+                    <div class="cl-input-group" style="height: 100%;">
+                      <label>Cuerpo del Mensaje <span class="cl-req">*</span></label>
+                      <div class="cl-input-control textarea-control" style="height: calc(100% - 30px);">
+                        <textarea id="tg-msg-text" placeholder="Escribe aquí el contenido del mensaje..." required></textarea>
+                      </div>
+                    </div>
                   </div>
                 </div>
+             </form>
 
-                <div class="tg-vars-hint">
-                  <strong>Variables Disponibles:</strong>
-                  <span class="tg-var-badge">{nombre}</span>
-                  <span class="tg-var-badge">{negocio}</span>
-                  <span class="tg-var-badge">{vencimiento}</span>
-                  <p>Las variables se reemplazarán automáticamente usando los datos del cliente anclado.</p>
-                </div>
-
-              </div>
-
-              <!-- Columna Derecha: El Mensaje -->
-              <div class="tg-form-col">
-                <div class="cl-input-group" style="height: 100%;">
-                  <label>Cuerpo del Mensaje <span class="cl-req">*</span></label>
-                  <div class="cl-input-control textarea-control" style="height: calc(100% - 30px);">
-                    <textarea id="tg-msg-text" placeholder="Escribe aquí... usa {nombre} para ser cortés."
-                      required></textarea>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="cl-form-footer" style="margin-top:20px;">
-              <button type="submit" class="cl-btn-primary tg-btn-send" id="btn-send-msg">
-                <i class="bi bi-send-fill"></i> Iniciar Envío Segmentado
-              </button>
-            </div>
-          </form>
-
+          </div>
         </div>
       </div>
 

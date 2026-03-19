@@ -524,7 +524,105 @@
   border-radius: 24px;
 }
 
-.cl-switch .slider.round:before {
-  border-radius: 50%;
+/* Progress Bar & Campaign Manager */
+.cl-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 12px 0;
+}
+.cl-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue), #00F0FF);
+    width: 0%;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+.tg-progress-container {
+    padding: 24px;
+    background: linear-gradient(to right, rgba(42, 171, 238, 0.05), rgba(42, 171, 238, 0.1));
+    border: 1px solid rgba(42, 171, 238, 0.3);
+    border-radius: 12px;
+}
+.theme-light .tg-progress-container {
+    background: linear-gradient(to right, rgba(42, 171, 238, 0.05), rgba(42, 171, 238, 0.08));
+    border-color: rgba(42, 171, 238, 0.2);
+}
+.tg-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--blue);
+}
+.tg-progress-header h4 { margin: 0; font-size: 1.05rem; }
+.tg-progress-hint {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
 }
 
+/* Campaign Layout */
+.tg-campaign-layout {
+    display: flex;
+    overflow: hidden;
+    min-height: 550px;
+    border-radius: 12px;
+}
+@media (max-width: 992px) {
+    .tg-campaign-layout { flex-direction: column; }
+    .tg-campaign-sidebar { width: 100% !important; border-right: none !important; border-bottom: 1px solid var(--border-glass); max-height: 300px; }
+    .tg-campaign-editor { padding: 20px !important; }
+}
+.tg-campaign-sidebar {
+    width: 340px;
+    border-right: 1px solid var(--border-glass);
+    display: flex;
+    flex-direction: column;
+    background: rgba(0,0,0,0.1);
+}
+.tg-camp-list {
+    flex: 1;
+    overflow-y: auto;
+}
+.tg-camp-item {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border-glass);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    border-left: 3px solid transparent;
+}
+.tg-camp-item:hover {
+    background: var(--bg-card-hover);
+}
+.tg-camp-item.active {
+    background: var(--bg-card-hover);
+    border-left-color: var(--blue);
+}
+.tg-camp-item strong { color: var(--text-base); margin-bottom: 6px; font-size: 1rem; }
+.tg-camp-item span { font-size: 0.85rem; color: var(--text-subtle); display: flex; align-items: center; gap: 6px; }
+.tg-camp-status { 
+    font-size: 0.75rem; 
+    margin-top: 8px; 
+    display: inline-flex; 
+    align-items: center;
+    padding: 3px 8px; 
+    border-radius: 6px; 
+    background: rgba(255,255,255,0.05); 
+    color: var(--text-muted);
+    font-weight: 500;
+    width: max-content;
+}
+.tg-camp-status.enviado { background: rgba(23, 215, 160, 0.1); color: var(--green); border: 1px solid rgba(23, 215, 160, 0.2); }
+.tg-camp-status.borrador { background: rgba(241, 196, 15, 0.1); color: #F1C40F; border: 1px solid rgba(241, 196, 15, 0.2); }
+
+.tg-campaign-editor {
+    flex: 1;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}

@@ -18,9 +18,11 @@ let currentBotToken = '';
 let _tgUsersCache = [];
 let _clientesCache = [];
 let _chatHistoryCache = [];
+let _campaignsCache = [];
 let _automations = { prev: true, corte: true }; // por defecto
 let _unsubTg = null;
 let _unsubCl = null;
+let _unsubCamp = null;
 let _currentChatId = null; // chat activo en la vista
 let _unsubChat = null; // listener del chat activo
 let _lastUpdateId = 0; // Para el long-polling de Telegram
@@ -47,6 +49,7 @@ export async function initTelegram() {
     
     _startTelegramListener();
     _startClientesListener();
+    _startCampaignsListener();
     
     await _loadConfig(); // token + automations
     
@@ -141,6 +144,12 @@ function _initUIListeners() {
         const tgId = modal.dataset.tgid;
         const clientId = $('link-cl-select').value;
         if (!clientId) { PhoenixToast.fire({ icon: 'warning', title: 'Selecciona un cliente.' }); return; }
+        
+        // Show loading state gracefully
+        const btnSaveL = $('btn-save-link');
+        const ogText = btnSaveL.innerHTML;
+        btnSaveL.disabled = true; btnSaveL.innerHTML = '<i class="bi bi-hourglass-split cl-spin"></i> Vinculando...';
+        
         try {
             await vincularClienteTelegram(tgId, clientId);
             _closeModalLink();
@@ -151,6 +160,7 @@ function _initUIListeners() {
             const msg = `🎉 *Bienvenido(a) ${clName}!*\n\nTu cuenta ha sido vinculada correctamente al sistema Phoenix.\nRecibirás tus notificaciones por esta vía.`;
             await enviarMensajeTelegram(tgId, msg);
         } catch(err) { Phoenix.fire({ icon: 'error', text: err.message }); }
+        finally { btnSaveL.disabled = false; btnSaveL.innerHTML = ogText; }
     });
 
     $('btn-use-sugg')?.addEventListener('click', () => {
@@ -191,7 +201,58 @@ function _initUIListeners() {
         }
     });
 
-    // -- Creador de Campañas / Masivo
+    // -- Gestor de Campañas y Masivos
+    $('btn-new-camp')?.addEventListener('click', _cleanCampaignEditor);
+
+    $('btn-del-camp')?.addEventListener('click', async () => {
+        const cId = $('tg-camp-id').value;
+        if(!cId) return;
+        
+        const res = await Phoenix.fire({
+            title: '¿Eliminar Campaña?',
+            text: 'Se borrará el registro de esta campaña permanentemente.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, Eliminar'
+        });
+        
+        if(res.isConfirmed) {
+            await remove(ref(Database, `telegram_campanas/${cId}`));
+            PhoenixToast.fire({ icon: 'success', title: 'Campaña eliminada' });
+            _cleanCampaignEditor();
+        }
+    });
+
+    $('btn-save-camp')?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        if(!$('form-telegram-msg').checkValidity()) {
+           $('form-telegram-msg').reportValidity();
+           return;
+        }
+        
+        const btnSave = $('btn-save-camp');
+        btnSave.disabled = true;
+        
+        const cId = $('tg-camp-id').value || push(ref(Database, 'telegram_campanas')).key;
+        const cData = {
+            name: $('tg-camp-name').value.trim(),
+            dest: $('tg-msg-dest').value,
+            text: $('tg-msg-text').value.trim(),
+            status: 'borrador', 
+            timestamp: Date.now()
+        };
+        
+        try {
+            await set(ref(Database, `telegram_campanas/${cId}`), cData);
+            $('tg-camp-id').value = cId;
+            PhoenixToast.fire({ icon: 'success', title: 'Borrador Guardado' });
+        } catch(err) {
+            Phoenix.fire({ icon: 'error', title: 'Error', text: err.message });
+        } finally {
+            btnSave.disabled = false;
+        }
+    });
+
     $('tg-templates')?.addEventListener('change', (e) => {
         const template = e.target.value;
         const textarea = $('tg-msg-text');
@@ -209,34 +270,39 @@ function _initUIListeners() {
 
     $('form-telegram-msg')?.addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        const cName = $('tg-camp-name').value.trim();
         const tipoDest = $('tg-msg-dest').value;
         const texto = $('tg-msg-text').value.trim();
 
         if (!texto) { PhoenixToast.fire({ icon: 'warning', title: 'Mensaje vacío.' }); return; }
 
-        const btnSend = $('btn-send-msg');
+        const resConf = await Phoenix.fire({
+            title: '¿Iniciar Envío Masivo?',
+            text: `Se enviará la campaña "${cName}" al segmento "${tipoDest}". Esta acción despacha mensajes reales.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, Lanzar Campaña',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if(!resConf.isConfirmed) return;
+
+        const btnSend = $('btn-send-camp');
         btnSend.disabled = true;
-        btnSend.innerHTML = '<i class="bi bi-hourglass-split cl-spin"></i> Procesando múltiples envíos...';
 
         try {
-            let envios = 0;
-            const promesas = [];
-
+            const targets = [];
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            
             _tgUsersCache.forEach(user => {
                 if (!user.linked_client_id) return;
-                
                 const clientObj = _clientesCache.find(c => c.id === user.linked_client_id);
                 if (!clientObj) return;
 
-                // Aplicar Segmentación (depende de propiedades calculadas, las haremos basandonos en limites)
-                // Para efectos reales en un SPA esto requiere el mismo calculo de servicios.js. 
-                // Por diseño, confiaremos en los dias restantes estandar si es necesario o enviaremos.
                 let cumpleSegmento = false;
-                
-                // Calculo rapido del estado
-                const today = new Date();
-                today.setHours(0,0,0,0);
-                const limitStr = clientObj.dtLimite || clientObj.FechaLimite; // depende modelo data
+                const limitStr = clientObj.dtLimite || clientObj.FechaLimite;
                 let dtLimite = limitStr ? new Date(limitStr + 'T00:00:00') : new Date();
                 const diffTime = dtLimite - today;
                 const diasRest = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -247,25 +313,90 @@ function _initUIListeners() {
                 else if (tipoDest === 'vencidos' && diasRest <= 0) cumpleSegmento = true;
 
                 if (cumpleSegmento) {
-                    const parsedMsg = _parseTemplate(texto, clientObj);
-                    promesas.push(
-                        enviarMensajeTelegram(user.telegram_id, parsedMsg).catch(err => {
-                            console.warn(`Falló envío a ${user.telegram_id}`, err);
-                        })
-                    );
-                    envios++;
+                    targets.push({ user, clientObj });
                 }
             });
 
-            await Promise.all(promesas);
-            Phoenix.fire({ icon: 'success', title: 'Campaña Finalizada', text: `Se despacharon ${envios} mensajes.` });
-            $('form-telegram-msg').reset();
+            if (targets.length === 0) {
+                Phoenix.fire({ icon: 'info', title: 'Campaña Vacía', text: 'Ningún usuario activo cumple con las condiciones de segmentación.' });
+                btnSend.disabled = false;
+                return;
+            }
+
+            // Lock the form state & save as draft initially if not saved
+            const cId = $('tg-camp-id').value || push(ref(Database, 'telegram_campanas')).key;
+            $('tg-camp-id').value = cId;
+            const cData = {
+                name: cName, dest: tipoDest, text: texto, status: 'enviando', timestamp: Date.now(), sent_count: 0
+            };
+            await set(ref(Database, `telegram_campanas/${cId}`), cData);
+
+            btnSend.style.display = 'none';
+            $('btn-save-camp').style.display = 'none';
+            $('btn-del-camp').style.display = 'none';
             
+            $('tg-camp-name').readOnly = true;
+            $('tg-msg-dest').disabled = true;
+            $('tg-templates').disabled = true;
+            $('tg-msg-text').readOnly = true;
+
+            const progressCont = $('tg-progress-container');
+            const progressFill = $('tg-progress-fill');
+            const progressText = $('tg-progress-text');
+            
+            progressCont.style.display = 'block';
+            progressFill.style.width = '0%';
+            progressText.textContent = `0 / ${targets.length}`;
+
+            // Background async loop
+            let sentCount = 0;
+            const batchSize = 5;
+            
+            const sendBatch = async (startIndex) => {
+                const batch = targets.slice(startIndex, startIndex + batchSize);
+                if (batch.length === 0) return true; 
+                
+                const promesas = batch.map(t => {
+                    const parsedMsg = _parseTemplate(texto, t.clientObj);
+                    return enviarMensajeTelegram(t.user.telegram_id, parsedMsg).catch(e => console.warn(e));
+                });
+                
+                await Promise.all(promesas);
+                sentCount += batch.length;
+                
+                const pct = Math.round((sentCount / targets.length) * 100);
+                progressFill.style.width = `${pct}%`;
+                progressText.textContent = `${sentCount} / ${targets.length}`;
+                
+                return false;
+            };
+
+            const intervalFn = async () => {
+                let currentIdx = 0;
+                while (currentIdx < targets.length) {
+                    await sendBatch(currentIdx);
+                    currentIdx += batchSize;
+                    await new Promise(r => setTimeout(r, 600)); // Rate limiting
+                }
+                
+                // Finalize execution
+                cData.status = 'enviado';
+                cData.sent_count = sentCount;
+                await set(ref(Database, `telegram_campanas/${cId}`), cData);
+                
+                Phoenix.fire({ icon: 'success', title: 'Campaña Despachada', text: `Se transmitieron ${sentCount} mensajes a Telegram con una alta tasa de entregabilidad.` });
+                
+                setTimeout(() => {
+                    progressCont.style.display = 'none';
+                    _loadCampaignToEditor(cId); 
+                }, 1500);
+            };
+
+            intervalFn();
+
         } catch(err) {
             Phoenix.fire({ icon: 'error', title: 'Error grave', text: err.message });
-        } finally {
             btnSend.disabled = false;
-            btnSend.innerHTML = '<i class="bi bi-send-fill"></i> Iniciar Envío Segmentado';
         }
     });
 
@@ -310,6 +441,20 @@ function _startClientesListener() {
             }, []);
         } else { _clientesCache = []; }
         _renderUsersSidebar();
+    });
+}
+
+function _startCampaignsListener() {
+    if (_unsubCamp) _unsubCamp();
+    _unsubCamp = onValue(ref(Database, 'telegram_campanas'), (snap) => {
+        if (snap.exists()) {
+            const data = snap.val();
+            _campaignsCache = Object.keys(data).map(k => ({ id: k, ...data[k] }));
+            _campaignsCache.sort((a,b) => b.timestamp - a.timestamp); // Descending By Date
+        } else {
+            _campaignsCache = [];
+        }
+        _renderCampaignsList();
     });
 }
 
@@ -448,6 +593,83 @@ function _parseTemplate(str, clientObj) {
         .replace(/\{nombre\}/g, nombreStr)
         .replace(/\{negocio\}/g, negocioStr)
         .replace(/\{vencimiento\}/g, vencStr);
+}
+
+function _renderCampaignsList() {
+    const list = $('tg-campaigns-list');
+    if (!list) return;
+
+    if (_campaignsCache.length === 0) {
+        list.innerHTML = `<div class="cl-empty-state" style="padding: 40px 20px; text-align:center; color: var(--text-muted);"><i class="bi bi-collection-play" style="font-size:2.5rem; display:block; margin-bottom:10px; opacity:0.5;"></i><span>No hay campañas registradas.</span></div>`;
+        return;
+    }
+
+    let html = '';
+    _campaignsCache.forEach(c => {
+        const bdgClass = c.status === 'enviado' ? 'enviado' : 'borrador';
+        const bdgIcon = c.status === 'enviado' ? '<i class="bi bi-check2-all"></i> Enviado' : '<i class="bi bi-pencil"></i> Borrador';
+        const dateStr = new Date(c.timestamp).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' });
+        
+        html += `
+            <div class="tg-camp-item" data-id="${c.id}">
+                <strong>${c.name}</strong>
+                <span><i class="bi bi-calendar3"></i> ${dateStr} • Seg: ${String(c.dest).toUpperCase()}</span>
+                <div class="tg-camp-status ${bdgClass}">${bdgIcon} ${c.sent_count ? `(${c.sent_count})` : ''}</div>
+            </div>
+        `;
+    });
+
+    list.innerHTML = html;
+
+    list.querySelectorAll('.tg-camp-item').forEach(item => {
+        item.addEventListener('click', () => {
+            list.querySelectorAll('.tg-camp-item').forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            _loadCampaignToEditor(item.dataset.id);
+        });
+    });
+}
+
+function _loadCampaignToEditor(id) {
+    const c = _campaignsCache.find(x => x.id === id);
+    if (!c) return;
+
+    $('tg-camp-title-view').textContent = 'Consultar Campaña';
+    $('tg-camp-id').value = c.id;
+    $('tg-camp-name').value = c.name;
+    $('tg-msg-dest').value = c.dest;
+    $('tg-msg-text').value = c.text;
+    
+    const isEnviado = (c.status === 'enviado');
+    $('tg-camp-name').readOnly = isEnviado;
+    $('tg-msg-dest').disabled = isEnviado;
+    $('tg-templates').disabled = isEnviado;
+    $('tg-msg-text').readOnly = isEnviado;
+
+    $('btn-save-camp').style.display = isEnviado ? 'none' : 'inline-block';
+    $('btn-send-camp').style.display = isEnviado ? 'none' : 'inline-block';
+    $('btn-del-camp').style.display = 'inline-block';
+}
+
+function _cleanCampaignEditor() {
+    $('tg-camp-title-view').textContent = 'Crear Nueva Campaña';
+    $('tg-camp-id').value = '';
+    $('tg-camp-name').value = '';
+    $('tg-msg-dest').value = 'todos';
+    $('tg-templates').value = '';
+    $('tg-msg-text').value = '';
+    
+    $('tg-camp-name').readOnly = false;
+    $('tg-msg-dest').disabled = false;
+    $('tg-templates').disabled = false;
+    $('tg-msg-text').readOnly = false;
+
+    $('btn-save-camp').style.display = 'inline-block';
+    $('btn-send-camp').style.display = 'inline-block';
+    $('btn-del-camp').style.display = 'none';
+    
+    const list = $('tg-campaigns-list');
+    if(list) list.querySelectorAll('.tg-camp-item').forEach(i => i.classList.remove('active'));
 }
 
 function _getClientName(id) {
