@@ -608,25 +608,154 @@ html, body {
 
 
 /* ══════════════════════════════
-   RESPONSIVE
+   HAMBURGUER & SIDEBAR MOBILE
+══════════════════════════════ */
+
+/* Close button inside sidebar (mobile only) */
+.sidebar-close-btn {
+  display: none;
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  display:none;
+  place-items: center;
+  transition: all var(--transition);
+  z-index: 10;
+}
+.sidebar-close-btn:hover { color: var(--text); border-color: var(--border); }
+
+/* Hamburger button in topbar */
+.hamburger-btn {
+  display: none;
+  width: 40px;
+  height: 40px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 20px;
+  cursor: pointer;
+  transition: all var(--transition);
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.hamburger-btn:hover { border-color: var(--green); color: var(--green); }
+
+/* Dark translucent overlay */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 199;
+  animation: overlayFadeIn 0.25s ease forwards;
+}
+.sidebar-overlay.visible { display: block; }
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ══════════════════════════════
+   RESPONSIVE — 1200px desktop wide
 ══════════════════════════════ */
 @media (max-width: 1200px) {
-  .stats-row { grid-template-columns: repeat(3, 1fr); }
-  .quick-grid { grid-template-columns: repeat(2, 1fr); }
+  .stats-row   { grid-template-columns: repeat(3, 1fr); }
+  .quick-grid  { grid-template-columns: repeat(3, 1fr); }
+  .dash-row-bottom { grid-template-columns: 1fr 300px; }
 }
 
-@media (max-width: 900px) {
-  :root { --sidebar-w: 200px; }
+/* ══════════════════════════════
+   RESPONSIVE — 992px laptop
+══════════════════════════════ */
+@media (max-width: 992px) {
+  :root { --sidebar-w: 220px; }
+  .quick-grid  { grid-template-columns: repeat(3, 1fr); }
+  .dash-row-bottom { grid-template-columns: 1fr; }
+  .dash-col-right  { flex-direction: row; gap: 16px; }
+  .dash-admins-card,
+  .dash-reminders-card { flex: 1; }
 }
 
+/* ══════════════════════════════
+   RESPONSIVE — 768px tablet
+══════════════════════════════ */
 @media (max-width: 768px) {
+  /* ─ Layout: sidebar becomes a drawer ─ */
   .app-layout { grid-template-columns: 1fr; }
-  .sidebar { display: none; }
-  .page-content { padding: 20px 16px; }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 270px;
+    height: 100vh;
+    z-index: 200;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 32px rgba(0,0,0,0.4);
+    overflow-y: auto;
+    padding-top: 56px; /* space for close btn */
+  }
+  .sidebar.open { left: 0; }
+  .sidebar-close-btn { display: grid; }
+  .hamburger-btn { display: flex; }
+
+  /* ─ Topbar ─ */
   .topbar { padding: 0 16px; }
-  .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
-  .quick-grid { grid-template-columns: repeat(2, 1fr); }
-  .view-title { font-size: 1.35rem; }
+  .topbar-left { gap: 12px; display: flex; align-items: center; }
+  .topbar-left p { display: none; } /* hide date on mobile topbar */
+
+  /* ─ Page ─ */
+  .page-content { padding: 20px 16px; }
+
+  /* ─ Stats & Grids ─ */
+  .stats-row   { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .quick-grid  { grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* ─ Dash rows ─ */
+  .dash-row-secondary { grid-template-columns: 1fr; }
+  .dash-row-bottom    { grid-template-columns: 1fr; }
+  .dash-col-right     { flex-direction: column; }
+
+  /* ─ View ─ */
+  .view-title    { font-size: 1.3rem; }
+  .view-header   { gap: 12px; margin-bottom: 20px; }
+  .view-header-icon { width: 44px; height: 44px; font-size: 18px; }
+
+  /* ─ Action buttons text reduction ─ */
+  .action-btn span { display: none; }
+}
+
+/* ══════════════════════════════
+   RESPONSIVE — 480px mobile
+══════════════════════════════ */
+@media (max-width: 480px) {
+  .stats-row   { grid-template-columns: 1fr; gap: 10px; }
+  .quick-grid  { grid-template-columns: 1fr; }
+  .quick-card  { padding: 14px 16px; }
+  .stat-card   { padding: 14px 16px; }
+  .stat-card-value { font-size: 1.15rem; }
+
+  .dash-activity-list { max-height: 260px; }
+  .dash-admins-list   { max-height: 160px; }
+
+  .page-content { padding: 14px 12px; }
+  .topbar { height: 56px; }
+
+  .view-title  { font-size: 1.1rem; }
+  .view-subtitle { font-size: 0.8rem; }
+  .section-title { font-size: 0.9rem; }
 }
 
 /* ══════════════════════════════
@@ -1143,31 +1272,7 @@ html, body {
 /* ── Topbar date ── */
 #topbar-date { font-size: 0.78rem; color: var(--text-muted); }
 
-/* ═══ RESPONSIVE DASHBOARD ═══ */
-@media (max-width: 1100px) {
-  .dash-row-bottom {
-    grid-template-columns: 1fr;
-  }
-  .dash-col-right {
-    flex-direction: row;
-  }
-  .dash-system-card,
-  .dash-reminders-card {
-    flex: 1;
-  }
-}
-
+/* ═══ RESPONSIVE DASHBOARD (shared rules driven by main breakpoints above) ═══ */
 @media (max-width: 860px) {
-  .dash-row-secondary {
-    grid-template-columns: 1fr;
-  }
-  .dash-col-right {
-    flex-direction: column;
-  }
-}
-
-@media (max-width: 768px) {
-  .dash-row-bottom {
-    grid-template-columns: 1fr;
-  }
+  .dash-row-secondary { grid-template-columns: 1fr; }
 }

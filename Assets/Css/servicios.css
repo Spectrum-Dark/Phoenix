@@ -622,9 +622,64 @@ body { background: var(--bg-main); color: var(--text-main); transition: backgrou
   .sv-empty-state { white-space: normal; }
 }
 
+@media (max-width: 1200px) {
+  .sv-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 992px) {
+  .sv-stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .sv-layout { grid-template-columns: 1fr; }
+  .sv-sidebar { position: static; max-width: 100%; }
+  .sv-header-content { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .sv-header-actions { width: 100%; justify-content: flex-end; }
+  .sv-toolbar { flex-wrap: wrap; gap: 10px; }
+  .sv-tb-right { width: 100%; }
+  .sv-search-box { flex: 1; min-width: 200px; }
+}
+
+@media (max-width: 768px) {
+  /* Table → Cards */
+  .sv-table thead { display: none; }
+  .sv-table tr {
+    display: block;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+  }
+  .sv-table tr:hover { background: var(--bg-elevated); }
+  .sv-table tr:hover td { background: transparent; }
+  .sv-table td {
+    text-align: right; padding: 9px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    display: flex; justify-content: space-between; align-items: center;
+    white-space: normal; font-size: 0.82rem;
+  }
+  .sv-table td:last-child { border-bottom: none; padding-bottom: 0; }
+  .sv-table td:first-child { padding-top: 0; }
+  .sv-table td:nth-child(4),
+  .sv-table td:nth-child(5) { display: flex; }
+  .sv-table td::before {
+    content: attr(data-label);
+    font-size: 0.7rem; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0;
+  }
+  .sv-td-user { flex-direction: row-reverse; }
+  .sv-date-group { align-items: flex-end; }
+  .sv-actions { opacity: 1; }
+  .sv-empty-state { white-space: normal; }
+
+  .sv-revenue-grid { grid-template-columns: 1fr; gap: 12px; }
+  .sv-header-blur  { padding: 16px 20px; }
+  .sv-toolbar      { padding: 12px 16px; }
+  .sv-stats-grid   { grid-template-columns: 1fr 1fr; }
+}
+
 @media (max-width: 480px) {
   .sv-stats-grid { grid-template-columns: 1fr 1fr; }
   .sv-form-footer button { flex: 1; }
   .sv-form-footer { flex-direction: column-reverse; gap: 10px; }
   .sv-revenue-grid { gap: 10px; }
+  .sv-stats-grid { grid-template-columns: 1fr; }
+  .sv-header-blur { padding: 14px 16px; }
 }

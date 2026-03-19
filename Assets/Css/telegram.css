@@ -626,3 +626,35 @@
     flex-direction: column;
     overflow-y: auto;
 }
+
+/* ══ RESPONSIVE TELEGRAM ══ */
+@media (max-width: 992px) {
+  .tg-campaign-layout { flex-direction: column; }
+  .tg-campaign-sidebar { width: 100% !important; border-right: none !important; border-bottom: 1px solid var(--border-glass); max-height: 280px; overflow-y: auto; }
+  .tg-users-sidebar { width: 100% !important; border-right: none !important; border-bottom: 1px solid var(--border-glass); max-height: 280px; overflow-y: auto; }
+  .tg-tabs { overflow-x: auto; white-space: nowrap; }
+}
+
+@media (max-width: 768px) {
+  .tg-tabs { gap: 6px; padding-bottom: 4px; overflow-x: auto; }
+  .tg-tab { padding: 10px 14px; font-size: 0.88rem; flex-shrink: 0; }
+  .tg-header-actions { margin-top: 10px; width: 100%; display: flex; flex-direction: column; gap: 8px; }
+  .tg-header-actions button { width: 100%; justify-content: center; }
+  .tg-settings-card { max-width: 100%; padding: 16px; }
+  .tg-auto-item { flex-wrap: wrap; gap: 12px; }
+  .tg-progress-container { padding: 16px; }
+  .tg-campaign-editor { flex: 1; min-height: 400px; }
+  .tg-camp-actions { flex-direction: column; gap: 8px; }
+  .tg-camp-actions button { width: 100%; justify-content: center; }
+  .tg-form-row { flex-direction: column; gap: 12px; }
+  .tg-seg-btns { flex-wrap: wrap; }
+  .tg-seg-btn { flex: 1; min-width: 120px; }
+}
+
+@media (max-width: 480px) {
+  .tg-tab { padding: 9px 12px; font-size: 0.8rem; }
+  .tg-campaign-editor { padding: 12px !important; }
+  .tg-vars-hint { padding: 10px; }
+  .tg-chat-input-area { padding: 10px; gap: 8px; }
+  .tg-seg-btn { flex: 1; min-width: 90px; padding: 8px 10px; font-size: 0.82rem; }
+}

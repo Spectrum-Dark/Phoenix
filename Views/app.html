@@ -26,7 +26,11 @@
   <body>
     <div class="app-layout">
       <!-- ═══════════════ SIDEBAR ═══════════════ -->
-      <nav class="sidebar" aria-label="Menú principal">
+      <nav class="sidebar" id="main-sidebar" aria-label="Menú principal">
+        <!-- Close button (mobile only) -->
+        <button class="sidebar-close-btn" id="btn-sidebar-close" aria-label="Cerrar menú">
+          <i class="bi bi-x-lg"></i>
+        </button>
         <!-- Brand -->
         <div class="sidebar-brand">
           <div class="sidebar-brand-icon">
@@ -81,11 +85,18 @@
         </div>
       </nav>
 
+      <!-- Mobile Sidebar Overlay -->
+      <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
       <!-- ═══════════════ CONTENIDO PRINCIPAL ═══════════════ -->
       <div class="main-content">
         <!-- ── Topbar ── -->
         <header class="topbar">
           <div class="topbar-left">
+            <!-- Hamburger (mobile) -->
+            <button class="hamburger-btn" id="btn-hamburger" aria-label="Abrir menú">
+              <i class="bi bi-list"></i>
+            </button>
             <h2 id="topbar-title">Inicio</h2>
             <p id="topbar-date">Cargando...</p>
           </div>

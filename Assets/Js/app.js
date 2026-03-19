@@ -117,8 +117,36 @@ navItems.forEach(item => {
   item.addEventListener('click', e => {
     e.preventDefault();
     switchView(item.dataset.view);
+    // Close sidebar on mobile after nav click
+    closeSidebar();
   });
 });
+
+/* ──────────────────────────────────────────────────────────
+   MOBILE SIDEBAR TOGGLE
+────────────────────────────────────────────────────────── */
+const sidebar  = document.getElementById('main-sidebar');
+const overlay  = document.getElementById('sidebar-overlay');
+const btnOpen  = document.getElementById('btn-hamburger');
+const btnClose = document.getElementById('btn-sidebar-close');
+
+function openSidebar() {
+  sidebar?.classList.add('open');
+  overlay?.classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  sidebar?.classList.remove('open');
+  overlay?.classList.remove('visible');
+  document.body.style.overflow = '';
+}
+
+btnOpen?.addEventListener('click', openSidebar);
+btnClose?.addEventListener('click', closeSidebar);
+overlay?.addEventListener('click', closeSidebar);
+
+// Close on Escape key
+window.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
 
 /* Accesos rápidos del dashboard */
 document.querySelectorAll('.quick-card[data-view]').forEach(card => {

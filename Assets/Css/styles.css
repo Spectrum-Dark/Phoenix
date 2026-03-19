@@ -400,6 +400,14 @@ html, body {
   .auth-panel-left { display: none; }
   .auth-panel-right { padding: 40px 28px; }
 }
+@media (max-width: 480px) {
+  .auth-panel-right { padding: 28px 20px; }
+  .auth-card { max-width: 100%; }
+  .auth-card-header h1 { font-size: 1.45rem; }
+  .form-group input { padding: 12px 14px; font-size: 0.88rem; }
+  .btn-primary { padding: 12px; font-size: 0.88rem; min-height: 48px; }
+  .auth-tabs { gap: 2px; }
+}
 
 /* ══════════════════════════════
    SWEETALERT2 — Tema Phoenix
