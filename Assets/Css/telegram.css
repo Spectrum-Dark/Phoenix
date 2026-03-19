@@ -1,0 +1,530 @@
+/* Assets/Css/telegram.css V2 */
+
+.tg-container {
+    padding-bottom: 40px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: calc(100vh - 80px); /* Fill SPA area */
+}
+
+/* Tab Navigation */
+.tg-tabs {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+    border-bottom: 2px solid var(--border-glass);
+    overflow-x: auto; /* Scrollable tabs on mobile */
+    white-space: nowrap;
+    padding-bottom: 2px;
+}
+
+/* Custom Scrollbar for Tabs */
+.tg-tabs::-webkit-scrollbar { height: 4px; }
+.tg-tabs::-webkit-scrollbar-thumb { background: var(--border-glass); border-radius: 4px; }
+
+.tg-tab {
+    background: transparent;
+    border: none;
+    padding: 12px 20px;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: -2px; /* cover border */
+}
+
+.tg-tab:hover {
+    color: var(--text-base);
+}
+
+.tg-tab.active {
+    color: var(--blue);
+    border-bottom: 2px solid var(--blue);
+}
+
+.tg-tab-pane {
+    display: none;
+    padding-top: 24px;
+    animation: fadeInTab 0.4s ease forwards;
+}
+
+.tg-tab-pane.active {
+    display: block;
+}
+
+@keyframes fadeInTab {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Dashboard Grid */
+.tg-dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+@media (max-width: 992px) {
+    .tg-dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.tg-card-title {
+    font-size: 1.1rem;
+    margin: 0 0 16px 0;
+    font-weight: 600;
+    color: var(--text-base);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Alertas List */
+.tg-alerts-list {
+    list-style: none;
+    padding: 0; margin: 0;
+}
+
+.tg-alert-item {
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: var(--bg-card-hover);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    border-left: 3px solid transparent;
+}
+
+.tg-alert-item.info { border-color: var(--blue); }
+.tg-alert-item.warning { border-color: #F1C40F; }
+.tg-alert-item.danger { border-color: var(--red); }
+
+/* History List */
+.tg-history-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.tg-history-item {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-glass);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.tg-history-item:last-child { border: none; }
+
+.tg-hist-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+.tg-hist-msg {
+    font-size: 0.95rem;
+    color: var(--text-base);
+    white-space: pre-wrap;
+}
+
+/* Users & Chat Layout (Sidebar + Chat) */
+.tg-users-sidebar {
+    width: 350px;
+    border-right: 1px solid var(--border-glass);
+    display: flex;
+    flex-direction: column;
+}
+
+.tg-users-list {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 600px;
+}
+
+.tg-user-card {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-glass);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background 0.2s;
+}
+
+.tg-user-card:hover, .tg-user-card.active {
+    background: var(--bg-card-hover);
+}
+
+.tg-user-card-info h4 { margin: 0 0 4px 0; font-size: 0.95rem; }
+.tg-user-card-info p { margin: 0; font-size: 0.8rem; color: var(--text-muted); }
+
+.tg-chat-view, .tg-chat-view-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 500px;
+    max-height: 600px;
+}
+
+.tg-chat-view-empty {
+    justify-content: center;
+    align-items: center;
+    color: var(--text-muted);
+    text-align: center;
+}
+.tg-chat-view-empty i { font-size: 3rem; margin-bottom: 10px; opacity: 0.5; }
+
+.tg-chat-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--border-glass);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.tg-chat-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--primary-color-alpha);
+    color: var(--blue);
+    display: flex; justify-content: center; align-items: center;
+    font-size: 1.2rem;
+}
+.tg-chat-info { flex: 1; display:flex; flex-direction: column; overflow: hidden; }
+.tg-chat-info strong { font-size: 1rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+.tg-chat-info span { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+
+.tg-chat-body {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    background: rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 300px; /* Asegurar área visible */
+}
+
+.tg-chat-bubble {
+    max-width: 75%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    position: relative;
+    word-break: break-word;
+}
+.tg-chat-bubble.out {
+    align-self: flex-end;
+    background: var(--blue);
+    color: white;
+    border-bottom-right-radius: 2px;
+}
+.tg-chat-bubble.in {
+    align-self: flex-start;
+    background: var(--bg-card-hover);
+    border: 1px solid var(--border-glass);
+    border-bottom-left-radius: 2px;
+}
+.tg-bubble-time {
+    font-size: 0.7rem;
+    opacity: 0.7;
+    margin-top: 4px;
+    text-align: right;
+    display: block;
+}
+
+.tg-chat-input-area {
+    padding: 16px;
+    border-top: 1px solid var(--border-glass);
+    display: flex;
+    gap: 10px;
+}
+.tg-chat-input-area textarea {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--border-glass);
+    border-radius: 8px;
+    padding: 10px;
+    color: var(--text-base);
+    resize: none;
+    height: 44px;
+    outline: none;
+}
+.tg-chat-input-area textarea:focus { border-color: var(--blue); }
+
+/* Composer Section */
+.tg-form-row {
+    display: flex;
+    gap: 24px;
+}
+.tg-form-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+@media (max-width: 992px) {
+    .cl-datagrid-card { flex-direction: column; }
+    .tg-users-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border-glass); max-height: 300px; }
+    .tg-chat-view, .tg-chat-view-empty { min-height: 400px; }
+}
+
+@media (max-width: 768px) {
+    .tg-form-row { flex-direction: column; }
+    .cl-stats-grid { grid-template-columns: 1fr; }
+    
+    .tg-header-actions { margin-top: 10px; width: 100%; display: flex; flex-direction: column; }
+    .tg-header-actions button { width: 100%; justify-content: center; }
+}
+
+/* Variables Hint */
+.tg-vars-hint {
+    background: rgba(42, 171, 238, 0.05);
+    border: 1px dashed rgba(42, 171, 238, 0.4);
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 15px;
+    font-size: 0.85rem;
+    color: var(--text-subtle);
+}
+.tg-var-badge {
+    display: inline-block;
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--blue);
+    font-family: monospace;
+    font-size: 0.8rem;
+    margin: 0 4px;
+}
+
+/* Automations Settings */
+.tg-settings-card {
+    padding: 24px;
+    max-width: 800px;
+}
+.tg-card-header {
+    border-bottom: 1px solid var(--border-glass);
+    padding-bottom: 16px;
+    margin-bottom: 10px;
+}
+.tg-card-header .tg-card-title {
+    margin-bottom: 6px;
+}
+.tg-card-header p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.tg-auto-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border-glass);
+}
+.tg-auto-item:last-child { border: none; }
+.tg-auto-info h4 { margin: 0 0 6px 0; font-size: 1.05rem; }
+.tg-auto-info p { margin: 0; font-size: 0.85rem; color: var(--text-subtle); }
+
+/* Smart Suggestion UI */
+.tg-smart-suggestion {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(23, 215, 160, 0.1);
+    border: 1px solid rgba(23, 215, 160, 0.3);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+.tg-smart-suggestion i { font-size: 1.5rem; color: var(--green); }
+.tg-smart-suggestion div { flex: 1; }
+.tg-smart-suggestion p { margin: 0; font-size: 0.85rem; }
+
+/* Existing utils */
+.tg-icon-glow {
+    background: linear-gradient(135deg, rgba(42, 171, 238, 0.2), rgba(34, 158, 217, 0.05));
+    border: 1px solid rgba(42, 171, 238, 0.2);
+    color: #2AABEE;
+}
+.theme-light .tg-icon-glow {
+    background: linear-gradient(135deg, rgba(42, 171, 238, 0.1), rgba(34, 158, 217, 0.02));
+    border: 1px solid rgba(42, 171, 238, 0.15);
+}
+.tg-btn-send {
+    background: linear-gradient(135deg, #2AABEE, #229ED9);
+    border: none;
+    box-shadow: 0 4px 15px rgba(42, 171, 238, 0.3);
+}
+.cl-modal-backdrop {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.cl-modal-content {
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    padding: 0;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    animation: fadeInModal .3s ease forwards;
+}
+.cl-modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border-glass); display: flex; justify-content: space-between; align-items: center;}
+.cl-modal-header h3 { margin: 0; font-size: 1.1rem; color: var(--text-base); font-weight: 600; display: flex; align-items: center; gap: 10px;}
+.cl-modal-close { background: transparent; border: none; color: var(--text-subtle); font-size: 1.2rem; cursor: pointer;}
+.cl-modal-body { padding: 24px; }
+.cl-modal-footer { padding: 16px 24px; border-top: 1px solid var(--border-glass); display: flex; justify-content: flex-end; gap: 12px;}
+
+/* Form Textarea & Select Support (Restored from missing base) */
+.tg-composer-card {
+    padding: 24px;
+}
+
+.cl-input-group label {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--text-base);
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.cl-input-control {
+    position: relative;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border-glass);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    transition: border 0.2s;
+}
+
+.cl-input-control input[type="text"] {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text-base);
+    padding: 14px 16px 14px 45px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    outline: none;
+}
+
+.cl-input-control:focus-within {
+    border-color: var(--blue);
+}
+
+.cl-input-icon {
+    position: absolute;
+    left: 14px;
+    color: var(--text-subtle);
+    font-size: 1.1rem;
+    pointer-events: none;
+}
+
+.cl-input-control select {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text-base);
+    padding: 14px 16px 14px 45px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+.cl-input-control select option {
+    background: var(--bg-card);
+    color: var(--text-base);
+}
+
+.textarea-control {
+    padding: 0;
+    height: auto;
+    align-items: flex-start;
+}
+
+.textarea-control textarea {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text-base);
+    padding: 16px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    resize: none;
+    outline: none;
+    min-height: 150px;
+}
+
+/* Switches (Toggles) para Automations */
+.cl-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.cl-switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.cl-switch .slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--border-glass);
+  transition: .3s;
+}
+
+.cl-switch .slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+}
+
+.cl-switch input:checked + .slider {
+  background-color: var(--blue);
+}
+
+.cl-switch input:focus + .slider {
+  box-shadow: 0 0 1px var(--blue);
+}
+
+.cl-switch input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+.cl-switch .slider.round {
+  border-radius: 24px;
+}
+
+.cl-switch .slider.round:before {
+  border-radius: 50%;
+}
+

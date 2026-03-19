@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Telegram V2</title>
+  <link rel="stylesheet" href="../Assets/Css/telegram.css">
+</head>
+
+<body>
+
+  <div class="cl-container tg-container">
+
+    <!-- ══ PAGE HEADER ══ -->
+    <div class="cl-header-blur">
+      <div class="cl-header-content">
+        <div class="cl-title-group">
+          <div class="cl-icon-glow tg-icon-glow">
+            <i class="bi bi-telegram"></i>
+          </div>
+          <div class="cl-title-text">
+            <h1>Comunicaciones (Bot)</h1>
+            <p>Centro inteligente de Telegram. Supervisa, automatiza y analiza interacciones.</p>
+          </div>
+        </div>
+        <div class="tg-header-actions">
+          <button class="cl-btn-secondary" id="btn-tg-config" title="Configurar Token">
+            <i class="bi bi-gear-fill"></i> Conexión a BotFather
+          </button>
+        </div>
+      </div>
+
+      <!-- ══ TABS NAVIGATION ══ -->
+      <div class="tg-tabs">
+        <button class="tg-tab active" data-tab="tab-dashboard"><i class="bi bi-grid-1x2"></i> Resumen</button>
+        <button class="tg-tab" data-tab="tab-usuarios"><i class="bi bi-people"></i> Usuarios y Chat</button>
+        <button class="tg-tab" data-tab="tab-mensajeria"><i class="bi bi-send"></i> Enviar Mensajes</button>
+        <button class="tg-tab" data-tab="tab-automatizacion"><i class="bi bi-robot"></i> Automatización</button>
+      </div>
+    </div>
+
+    <div class="tg-tab-content-wrapper">
+
+      <!-- ═════════ TAB 1: DASHBOARD / RESUMEN ═════════ -->
+      <div class="tg-tab-pane active" id="tab-dashboard">
+        <div class="cl-stats-grid" style="margin-bottom: 24px;">
+          <div class="cl-stat-card cl-card-glass">
+            <div class="cl-stat-top">
+              <div class="cl-stat-icon cl-icon-total"><i class="bi bi-broadcast"></i></div>
+              <span class="cl-stat-label">Usuarios Vinculados</span>
+            </div>
+            <div class="cl-stat-value" id="tg-stat-linked">0 <span style="font-size:14px; color:var(--text-muted)">/ 0
+                total</span></div>
+          </div>
+          <div class="cl-stat-card cl-card-glass">
+            <div class="cl-stat-top">
+              <div class="cl-stat-icon cl-icon-active"><i class="bi bi-send-check"></i></div>
+              <span class="cl-stat-label">Mensajes Enviados</span>
+            </div>
+            <div class="cl-stat-value" id="tg-stat-msgs">0</div>
+          </div>
+          <div class="cl-stat-card cl-card-glass" style="position: relative; overflow: hidden;">
+            <div class="cl-stat-top">
+              <div class="cl-stat-icon cl-icon-maint" style="background:#55ff5522;color:#55ff55;"><i
+                  class="bi bi-activity"></i></div>
+              <span class="cl-stat-label">Tasa de Entrega (Aprox)</span>
+            </div>
+            <div class="cl-stat-value">99.8%</div>
+          </div>
+        </div>
+
+        <div class="tg-dashboard-grid">
+          <!-- Alertas Inteligentes -->
+          <div class="cl-card-glass tg-alerts-card">
+            <h3 class="tg-card-title"><i class="bi bi-bell-fill" style="color:#F1C40F;"></i> Alertas Inteligentes</h3>
+            <ul class="tg-alerts-list" id="tg-alerts-list">
+              <!-- JS Inject -->
+              <li class="tg-alert-item info">
+                <i class="bi bi-info-circle"></i> Todo funcionando correctamente.
+              </li>
+            </ul>
+          </div>
+
+          <!-- Ultimos Mensajes -->
+          <div class="cl-card-glass tg-history-card">
+            <h3 class="tg-card-title"><i class="bi bi-clock-history"></i> Historial Reciente</h3>
+            <div class="tg-history-list" id="tg-recent-history">
+              <div class="cl-empty-state"><i class="bi bi-inbox"></i> Sin mensajes recientes registrados.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ═════════ TAB 2: USUARIOS Y CHAT ═════════ -->
+      <div class="tg-tab-pane" id="tab-usuarios">
+        <div class="cl-card-glass cl-datagrid-card" style="margin: 0; display:flex; flex-direction: row; gap: 0; padding: 0; overflow: hidden;">
+
+          <!-- Left Sidebar: Lista de usuarios -->
+          <div class="tg-users-sidebar">
+            <div class="cl-toolbar" style="padding: 16px; border-bottom: 1px solid var(--border-glass);">
+              <div class="cl-search-box" style="width:100%;">
+                <i class="bi bi-search"></i>
+                <input type="text" id="tg-search" placeholder="Buscar por nombre o username...">
+              </div>
+              <button class="cl-btn-icon" id="tg-btn-refresh" title="Sincronizar GetUpdates">
+                <i class="bi bi-arrow-repeat"></i>
+              </button>
+            </div>
+            <div class="tg-users-list" id="tg-tbody">
+              <!-- JS INJECT CARDS -->
+              <div style="padding: 20px; text-align:center; color: var(--text-muted)">Cargando...</div>
+            </div>
+          </div>
+
+          <!-- Right Side: Chat View (Simulacion) -->
+          <div class="tg-chat-view" id="tg-chat-view" style="display:none;">
+            <div class="tg-chat-header">
+              <div class="tg-chat-avatar"><i class="bi bi-person"></i></div>
+              <div class="tg-chat-info">
+                <strong id="tg-chat-name">Selecciona un usuario</strong>
+                <span id="tg-chat-status"></span>
+              </div>
+              <div class="tg-chat-actions">
+                <button class="cl-btn-icon tg-btn-unlink" id="tg-header-unlink" title="Desvincular"><i
+                    class="bi bi-link-45deg"></i></button>
+              </div>
+            </div>
+            <div class="tg-chat-body" id="tg-chat-messages">
+              <!-- Chat bubbles here -->
+            </div>
+            <div class="tg-chat-input-area">
+              <textarea id="tg-chat-quick-message" placeholder="Escribe un mensaje rápido..."></textarea>
+              <button class="cl-btn-primary" id="tg-btn-send-quick"><i class="bi bi-send"></i></button>
+            </div>
+          </div>
+
+          <div class="tg-chat-view-empty" id="tg-chat-empty" style="padding: 40px;">
+            <i class="bi bi-chat-square-dots"></i>
+            <p>Selecciona un usuario de la lista para ver el historial y enviar mensajes.</p>
+          </div>
+
+        </div>
+      </div>
+
+
+      <!-- ═════════ TAB 3: CENTRO DE MENSAJES (Plantillas y Segmentación) ═════════ -->
+      <div class="tg-tab-pane" id="tab-mensajeria">
+        <div class="cl-card-glass tg-composer-card">
+          <h2 class="tg-card-title"><i class="bi bi-megaphone"></i> Creador de Campañas / Mensajes</h2>
+
+          <form id="form-telegram-msg" class="cl-form" novalidate style="margin-top: 20px;">
+            <!-- Tramos -->
+            <div class="tg-form-row">
+              <!-- Columna Izquierda: Opciones de destino y plantillas -->
+              <div class="tg-form-col">
+
+                <div class="cl-input-group">
+                  <label>Segmentación (¿A quién va dirigido?)</label>
+                  <div class="cl-input-control">
+                    <i class="bi bi-people cl-input-icon"></i>
+                    <select id="tg-msg-dest" required>
+                      <option value="todos">Todos los vinculados</option>
+                      <option value="activos">Solo activos (Sistema)</option>
+                      <option value="porvencer">Solo próximos a vencer (≤ 5 días)</option>
+                      <option value="vencidos">Solo vencidos o suspendidos</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="cl-input-group">
+                  <label>Plantillas Rápidas</label>
+                  <div class="cl-input-control">
+                    <i class="bi bi-file-text cl-input-icon"></i>
+                    <select id="tg-templates">
+                      <option value="">-- Redactar manualmente --</option>
+                      <option value="Aviso General">Aviso General (Mantenimiento)</option>
+                      <option value="Recordatorio de Pago">Recordatorio de Pago</option>
+                      <option value="Promocion">Promoción Especial</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="tg-vars-hint">
+                  <strong>Variables Disponibles:</strong>
+                  <span class="tg-var-badge">{nombre}</span>
+                  <span class="tg-var-badge">{negocio}</span>
+                  <span class="tg-var-badge">{vencimiento}</span>
+                  <p>Las variables se reemplazarán automáticamente usando los datos del cliente anclado.</p>
+                </div>
+
+              </div>
+
+              <!-- Columna Derecha: El Mensaje -->
+              <div class="tg-form-col">
+                <div class="cl-input-group" style="height: 100%;">
+                  <label>Cuerpo del Mensaje <span class="cl-req">*</span></label>
+                  <div class="cl-input-control textarea-control" style="height: calc(100% - 30px);">
+                    <textarea id="tg-msg-text" placeholder="Escribe aquí... usa {nombre} para ser cortés."
+                      required></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="cl-form-footer" style="margin-top:20px;">
+              <button type="submit" class="cl-btn-primary tg-btn-send" id="btn-send-msg">
+                <i class="bi bi-send-fill"></i> Iniciar Envío Segmentado
+              </button>
+            </div>
+          </form>
+
+        </div>
+      </div>
+
+
+      <!-- ═════════ TAB 4: AUTOMATIZACIÓN ═════════ -->
+      <div class="tg-tab-pane" id="tab-automatizacion">
+        <div class="cl-card-glass tg-settings-card">
+          <div class="tg-card-header">
+            <h2 class="tg-card-title"><i class="bi bi-sliders"></i> Reglas de Negocio Automatizadas</h2>
+            <p>La mensajería automática se ejecuta en segundo plano según el estado de las suscripciones en Phoenix.</p>
+          </div>
+
+          <div class="tg-automations-list" id="tg-automations-container">
+            <!-- Item Auto -->
+            <div class="tg-auto-item">
+              <div class="tg-auto-info">
+                <h4>Alertas Preventivas (Próximos a Vencer)</h4>
+                <p>Envía un mensaje 5 días antes de que la suscripción caduque.</p>
+              </div>
+              <label class="cl-switch">
+                <input type="checkbox" id="auto-prev" checked>
+                <span class="slider round"></span>
+              </label>
+            </div>
+            <!-- Item Auto -->
+            <div class="tg-auto-item">
+              <div class="tg-auto-info">
+                <h4>Avisos de Corte (Vencidos)</h4>
+                <p>Envía un mensaje notificando la interrupción del servicio al caducar.</p>
+              </div>
+              <label class="cl-switch">
+                <input type="checkbox" id="auto-corte" checked>
+                <span class="slider round"></span>
+              </label>
+            </div>
+
+            <!-- Save config btn -->
+            <button class="cl-btn-primary" id="btn-save-automations" style="margin-top: 20px;">Guardar
+              Preferencias</button>
+          </div>
+        </div>
+      </div>
+
+    </div> <!-- /Tab Wrappers -->
+
+  <!-- ══ MODAL DE VINCULACIÓN INTELIGENTE ══ -->
+  <div class="cl-modal-backdrop" id="modal-vincular" style="display:none;">
+    <div class="cl-modal-content">
+      <div class="cl-modal-header">
+        <h3><i class="bi bi-magic"></i> Vincular Cliente al Bot</h3>
+        <button class="cl-modal-close" id="btn-close-modal-link"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="cl-modal-body">
+        <p class="cl-input-hint" style="margin-bottom: 20px;">
+          Usuario Telegram: <strong id="link-tg-name"></strong> (@<span id="link-tg-username"></span>).<br>
+        </p>
+
+        <div class="tg-smart-suggestion" id="link-smart-suggestion" style="display:none;">
+          <i class="bi bi-stars"></i>
+          <div>
+            <strong>Sugerencia Encontrada:</strong>
+            <p id="sugg-text">Coincidencia de nombre de cliente</p>
+          </div>
+          <button class="cl-btn-ghost btn-xs" id="btn-use-sugg">Usar</button>
+        </div>
+
+        <div class="cl-input-group">
+          <label>Selecciona el Cliente Autónomo</label>
+          <div class="cl-input-control">
+            <i class="bi bi-person cl-input-icon"></i>
+            <select id="link-cl-select">
+              <option>Cargando clientes...</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="cl-modal-footer">
+        <button class="cl-btn-ghost" id="btn-cancel-link">Cancelar</button>
+        <button class="cl-btn-primary" id="btn-save-link"><i class="bi bi-check-lg"></i> Confirmar Vinculación</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MODAL CONFIGURACIÓN TELEGRAM ══ -->
+  <div class="cl-modal-backdrop" id="modal-tg-config" style="display:none;">
+    <div class="cl-modal-content">
+      <div class="cl-modal-header">
+        <h3><i class="bi bi-gear-wide-connected"></i> Configuración del Token</h3>
+        <button class="cl-modal-close" id="btn-close-modal-config"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="cl-modal-body">
+        <p class="cl-input-hint" style="margin-bottom: 20px;">
+          Token proporcionado por BotFather en Telegram (Se requiere para toda comunicación).
+        </p>
+        <div class="cl-input-group">
+          <label>API Bot Token</label>
+          <div class="cl-input-control">
+            <i class="bi bi-key cl-input-icon"></i>
+            <input type="text" id="tg-config-token">
+          </div>
+        </div>
+      </div>
+      <div class="cl-modal-footer">
+        <button class="cl-btn-ghost" id="btn-cancel-config">Cancelar</button>
+        <button class="cl-btn-primary" id="btn-save-config">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+</div> <!-- /tg-container -->
+
+</body>
+
+</html>

@@ -15,6 +15,7 @@ import { initClientes } from './clientes.js';
 import { initServicios } from './servicios.js';
 import { initPerfil }    from './perfil.js';
 import { initConfiguraciones, cargarConfiguraciones, aplicarIdioma } from './configuraciones.js';
+import { initTelegram } from './telegram.js';
 import {
   Database,
   registrarActividadDash,
@@ -41,6 +42,7 @@ const viewTitles = {
   'view-servicios': 'Servicios',
   'view-perfil':    'Mi Perfil',
   'view-ajustes':   'Configuraciones',
+  'view-telegram':  'Telegram Manager',
 };
 
 // Mapa de URLs de las vistas
@@ -49,6 +51,7 @@ const viewUrls = {
   'view-servicios': './servicios.html',
   'view-perfil':    './perfil.html',
   'view-ajustes':   './configuraciones.html',
+  'view-telegram':  './telegram.html',
 };
 
 // Selectores del wrapper dentro de cada HTML
@@ -57,6 +60,7 @@ const viewWrappers = {
   'view-servicios': '.servicios-wrapper',
   'view-perfil':    '.perfil-wrapper',
   'view-ajustes':   '.config-wrapper',
+  'view-telegram':  '.tg-container',
 };
 
 async function switchView(viewId) {
@@ -90,6 +94,7 @@ async function switchView(viewId) {
         if (viewId === 'view-servicios') initServicios();
         if (viewId === 'view-perfil')    initPerfil();
         if (viewId === 'view-ajustes')   initConfiguraciones();
+        if (viewId === 'view-telegram')  initTelegram();
       } else {
         target.innerHTML = '<div style="padding:40px;text-align:center;color:var(--red);">Error al cargar la vista</div>';
       }

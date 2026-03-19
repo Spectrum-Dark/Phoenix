@@ -24,6 +24,8 @@ import {
   ref, get, onValue, query, orderByChild, limitToLast,
 } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js';
 
+import { enviarRecordatorios } from './telegram.js';
+
 /* ──────────────────────────────────────────────────────────
    CONSTANTES Y CONFIGURACIÓN
 ────────────────────────────────────────────────────────── */
@@ -343,6 +345,13 @@ async function _auditAndRender() {
   _updateDashboardStats();
   _renderDataGrid();
   _updateSystemRecords();
+  
+  // 3.5 Disparar notificaciones por API de Telegram
+  try {
+    await enviarRecordatorios(_suscripciones);
+  } catch (err) {
+    console.warn('[Telegram] Error enviando recordatorios:', err);
+  }
 
   // 4. Footer timestamp
   const footerUpdate = $('sv-footer-update');
